@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>diginachlass.ch – Ihre digitalen Konten, geordnet für den Ernstfall</title>
+<meta name="description" content="diginachlass.ch hilft Ihnen, Ihre wichtigsten digitalen Konten in wenigen Minuten zu strukturieren – KI-gestützt, einfach und sicher. Damit Angehörige im Ernstfall nicht vor verschlossenen Türen stehen.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   diginachlass.ch — Landingpage
+   Inhalte werden aus dem CONTENT-Objekt (siehe Script) gerendert
+   und sind über das Admin-Panel (Zahnrad-Button) bearbeitbar.
+   ========================================================= */
+
+:root{
+  --paper:      #F6F2EA;
+  --paper-2:    #FCFAF4;
+  --ink:        #1B2A26;
+  --ink-soft:   #51625B;
+  --forest:     #1F4A43;
+  --forest-deep:#143A33;
+  --forest-ink: #0F2A25;
+  --clay:       #C8633B;
+  --clay-deep:  #AF5430;
+  --sage:       #E7EADF;
+  --line:       rgba(27,42,38,.12);
+  --line-soft:  rgba(27,42,38,.07);
+  --ok:         #4F8A6B;
+  --warn:       #C9A23C;
+  --risk:       #C0573B;
+
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono:'Spline Sans Mono', monospace;
+
+  --r-sm:10px; --r:16px; --r-lg:24px;
+  --shadow-sm:0 1px 2px rgba(20,40,35,.05), 0 4px 14px rgba(20,40,35,.05);
+  --shadow:0 12px 40px -12px rgba(20,40,35,.22);
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --maxw:1180px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--ink);
+  font-size:clamp(16px,1.05vw,17.5px);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+
+/* grain + ambient glow */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.4;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 28px}
+section{position:relative;z-index:2}
+.sec-pad{padding:clamp(72px,10vw,132px) 0}
+
+/* ---------- Eyebrow / headings ---------- */
+.eyebrow{
+  font-family:var(--font-mono);font-size:.72rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--clay);font-weight:500;
+  display:inline-flex;align-items:center;gap:.6em;margin-bottom:1.1rem;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--clay);opacity:.55}
+.eyebrow.center{justify-content:center}
+.eyebrow.light{color:#E2A988}
+.eyebrow.light::before{background:#E2A988}
+
+h1,h2,h3{font-family:var(--font-display);font-weight:500;line-height:1.05;letter-spacing:-.01em;color:var(--ink)}
+.h-display{font-size:clamp(2.5rem,5.6vw,4.4rem);line-height:1.02;letter-spacing:-.02em}
+.h-sec{font-size:clamp(2rem,3.8vw,3rem);max-width:18ch}
+.h-sec.center{margin-left:auto;margin-right:auto;text-align:center}
+.lede{font-size:clamp(1.06rem,1.35vw,1.22rem);color:var(--ink-soft);max-width:58ch}
+.lede.center{margin-left:auto;margin-right:auto;text-align:center}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:.55em;font-weight:600;
+  padding:.95em 1.55em;border-radius:999px;font-size:.96rem;letter-spacing:.005em;
+  transition:transform .25s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease), color .25s var(--ease);
+  white-space:nowrap;
+}
+.btn .arr{transition:transform .3s var(--ease)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn-primary{background:var(--clay);color:#fff;box-shadow:0 8px 22px -8px rgba(200,99,59,.6)}
+.btn-primary:hover{background:var(--clay-deep);transform:translateY(-2px);box-shadow:0 14px 30px -8px rgba(200,99,59,.55)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn-ghost:hover{background:rgba(27,42,38,.04);border-color:rgba(27,42,38,.25);transform:translateY(-2px)}
+.btn-light{background:var(--paper);color:var(--forest-deep)}
+.btn-light:hover{background:#fff;transform:translateY(-2px)}
+.btn-sm{padding:.7em 1.15em;font-size:.9rem}
+
+/* ---------- Header ---------- */
+.site-header{
+  position:sticky;top:0;z-index:50;transition:background .4s var(--ease), box-shadow .4s var(--ease), border-color .4s var(--ease);
+  border-bottom:1px solid transparent;
+}
+.site-header.scrolled{background:rgba(246,242,234,.82);backdrop-filter:blur(14px);border-color:var(--line-soft);box-shadow:0 1px 24px rgba(20,40,35,.05)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:18px;padding-bottom:18px}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--font-display);font-size:1.32rem;font-weight:500;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;flex:0 0 auto}
+.brand .tld{color:var(--clay)}
+.nav-links{display:flex;align-items:center;gap:30px}
+.nav-links a{font-size:.95rem;color:var(--ink-soft);font-weight:500;transition:color .2s;position:relative}
+.nav-links a::after{content:"";position:absolute;left:0;right:100%;bottom:-5px;height:1.5px;background:var(--clay);transition:right .3s var(--ease)}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{right:0}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-burger{display:none;width:42px;height:42px;border-radius:var(--r-sm);border:1px solid var(--line);align-items:center;justify-content:center;color:var(--ink)}
+.mobile-menu{display:none}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;overflow:hidden;padding-top:clamp(46px,7vw,84px);padding-bottom:clamp(64px,9vw,118px)}
+.hero-glow{position:absolute;inset:0;z-index:0;pointer-events:none}
+.hero-glow::before{content:"";position:absolute;top:-18%;left:-8%;width:55%;height:80%;background:radial-gradient(circle at 30% 30%, rgba(31,74,67,.16), transparent 62%);filter:blur(8px)}
+.hero-glow::after{content:"";position:absolute;bottom:-22%;right:-6%;width:52%;height:75%;background:radial-gradient(circle at 70% 70%, rgba(200,99,59,.16), transparent 60%)}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.08fr .92fr;gap:clamp(36px,5vw,72px);align-items:center}
+.hero-text{max-width:38rem}
+.hero-text h1{margin-bottom:1.3rem}
+.hero-text h1 .accent{color:var(--forest);font-style:italic;font-weight:400}
+.hero-text .lede{margin-bottom:2.1rem}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.hero-note{margin-top:1.5rem;font-size:.85rem;color:var(--ink-soft);display:flex;align-items:center;gap:.6em;font-family:var(--font-mono);letter-spacing:.01em}
+.hero-note .check{color:var(--ok)}
+
+/* hero preview card (Compendium-Teaser) */
+.preview{
+  position:relative;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.preview::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);pointer-events:none}
+.preview-head{background:var(--forest);color:var(--paper);padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
+.preview-head .pv-title{font-family:var(--font-display);font-size:1.08rem;letter-spacing:-.01em}
+.preview-head .pv-dots{display:flex;gap:6px}
+.preview-head .pv-dots i{width:9px;height:9px;border-radius:50%;background:rgba(246,242,234,.4)}
+.preview-body{padding:10px 12px}
+.pv-row{display:flex;align-items:center;gap:14px;padding:13px 12px;border-radius:12px;transition:background .25s}
+.pv-row+.pv-row{border-top:1px solid var(--line-soft)}
+.pv-row:hover{background:var(--sage)}
+.pv-cat{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);width:104px;flex:0 0 auto}
+.pv-svc{font-weight:500;color:var(--ink);flex:1;font-size:.95rem}
+.pv-status{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--ink-soft)}
+.dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 3px rgba(0,0,0,.04)}
+.preview-foot{padding:14px 22px 18px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:var(--ink-soft)}
+.preview-foot .ai-tag{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;color:var(--forest)}
+.spark{width:15px;height:15px}
+
+/* ---------- Problem ---------- */
+.problem{background:linear-gradient(180deg, var(--paper) 0%, #F1ECE2 100%)}
+.problem-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(34px,5vw,72px);align-items:start}
+.problem-body p{margin-top:1.2rem;color:var(--ink-soft);font-size:1.08rem;max-width:46ch}
+.stats{display:grid;gap:14px}
+.stat{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px;display:flex;gap:20px;align-items:baseline}
+.stat .num{font-family:var(--font-display);font-size:2.4rem;line-height:1;color:var(--forest);min-width:96px}
+.stat .lbl{color:var(--ink-soft);font-size:.97rem}
+
+/* ---------- How / Timeline ---------- */
+.how-head{max-width:62rem;margin-bottom:clamp(44px,6vw,72px)}
+.timeline{position:relative;display:grid;gap:6px;max-width:840px}
+.timeline::before{content:"";position:absolute;left:23px;top:14px;bottom:14px;width:2px;background:linear-gradient(180deg,var(--clay),rgba(200,99,59,.15));border-radius:2px}
+.step{position:relative;display:grid;grid-template-columns:48px 1fr;gap:26px;padding:18px 0;align-items:start}
+.step-node{position:relative;z-index:2;width:48px;height:48px;border-radius:50%;background:var(--paper-2);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.82rem;font-weight:500;color:var(--clay);box-shadow:var(--shadow-sm);transition:transform .3s var(--ease), border-color .3s, background .3s}
+.step:hover .step-node{transform:scale(1.06);border-color:var(--clay);background:#fff}
+.step-c h3{font-size:1.32rem;margin-bottom:.4rem}
+.step-c p{color:var(--ink-soft);max-width:54ch;font-size:1.02rem}
+
+/* ---------- Features / Categories ---------- */
+.features{background:var(--paper-2)}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:clamp(40px,5vw,60px)}
+.cat{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:30px 28px 32px;transition:transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s}
+.cat:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:rgba(31,74,67,.25)}
+.cat-ico{width:52px;height:52px;border-radius:14px;background:var(--sage);color:var(--forest);display:flex;align-items:center;justify-content:center;margin-bottom:20px;transition:background .3s, color .3s}
+.cat:hover .cat-ico{background:var(--forest);color:var(--paper)}
+.cat-ico svg{width:26px;height:26px}
+.cat h3{font-size:1.28rem;margin-bottom:.5rem}
+.cat p{color:var(--ink-soft);font-size:.98rem}
+
+/* ---------- AI section (dark) ---------- */
+.ai{background:var(--forest-deep);color:var(--paper);position:relative;overflow:hidden}
+.ai::before{content:"";position:absolute;top:-30%;right:-10%;width:60%;height:120%;background:radial-gradient(circle, rgba(200,99,59,.22), transparent 60%);pointer-events:none}
+.ai::after{content:"";position:absolute;bottom:-40%;left:-12%;width:55%;height:120%;background:radial-gradient(circle, rgba(120,170,150,.14), transparent 60%);pointer-events:none}
+.ai .container{position:relative;z-index:2}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,80px);align-items:center}
+.ai h2{color:var(--paper)}
+.ai .lede{color:rgba(246,242,234,.78)}
+.ai-examples{display:grid;gap:14px;margin-top:8px}
+.ai-card{background:rgba(246,242,234,.06);border:1px solid rgba(246,242,234,.14);border-radius:var(--r);padding:22px 24px;display:flex;gap:18px;align-items:flex-start;transition:background .3s, transform .3s var(--ease)}
+.ai-card:hover{background:rgba(246,242,234,.1);transform:translateX(4px)}
+.ai-card .flag{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:rgba(200,99,59,.2);color:#E9A983;display:flex;align-items:center;justify-content:center}
+.ai-card h3{color:var(--paper);font-size:1.12rem;margin-bottom:.25rem}
+.ai-card p{color:rgba(246,242,234,.72);font-size:.94rem}
+.usp{margin-top:6px}
+.usp h3{font-family:var(--font-display);font-size:1.5rem;color:var(--paper);margin-bottom:1.3rem}
+.usp ul{list-style:none;display:grid;gap:16px}
+.usp li{display:flex;gap:14px;align-items:flex-start;color:rgba(246,242,234,.9);font-size:1.04rem}
+.usp .tick{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--clay);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.usp .tick svg{width:13px;height:13px}
+
+/* ---------- Pricing ---------- */
+.price-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:880px;margin:clamp(44px,5vw,60px) auto 0;align-items:stretch}
+.plan{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r-lg);padding:36px 34px;display:flex;flex-direction:column;position:relative;transition:transform .35s var(--ease), box-shadow .35s var(--ease)}
+.plan:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.plan.featured{border-color:var(--forest);box-shadow:0 20px 50px -20px rgba(31,74,67,.35);background:linear-gradient(180deg,#fff,var(--paper-2))}
+.plan-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--forest);color:var(--paper);font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;border-radius:999px}
+.plan h3{font-size:1.4rem;margin-bottom:.4rem}
+.plan .p-desc{color:var(--ink-soft);font-size:.95rem;min-height:2.8em}
+.plan .p-price{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px}
+.plan .p-price .amt{font-family:var(--font-display);font-size:2.7rem;line-height:1;color:var(--ink)}
+.plan .p-price .per{color:var(--ink-soft);font-size:.9rem}
+.plan ul{list-style:none;display:grid;gap:12px;margin:24px 0 28px;flex:1}
+.plan li{display:flex;gap:11px;align-items:flex-start;font-size:.96rem;color:var(--ink)}
+.plan li .pt{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--sage);color:var(--forest);display:flex;align-items:center;justify-content:center;margin-top:2px}
+.plan.featured li .pt{background:var(--forest);color:#fff}
+.plan li .pt svg{width:11px;height:11px}
+.plan .btn{width:100%;justify-content:center}
+
+/* ---------- Trust ---------- */
+.trust{background:linear-gradient(180deg,#F1ECE2,var(--paper))}
+.trust-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(34px,5vw,72px);align-items:center}
+.trust-body p{color:var(--ink-soft);font-size:1.1rem;margin-top:1.2rem;max-width:48ch}
+.trust-points{display:grid;gap:14px}
+.trust-point{display:flex;gap:16px;align-items:center;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);padding:20px 24px;font-weight:500}
+.trust-point .tp-ico{flex:0 0 auto;width:42px;height:42px;border-radius:11px;background:var(--forest);color:var(--paper);display:flex;align-items:center;justify-content:center}
+.trust-point .tp-ico svg{width:20px;height:20px}
+
+/* ---------- Final CTA ---------- */
+.final{position:relative;overflow:hidden}
+.final-card{position:relative;background:var(--forest);border-radius:var(--r-lg);padding:clamp(48px,7vw,90px) clamp(28px,5vw,72px);text-align:center;overflow:hidden;box-shadow:var(--shadow)}
+.final-card::before{content:"";position:absolute;top:-40%;left:-10%;width:50%;height:160%;background:radial-gradient(circle,rgba(200,99,59,.3),transparent 60%)}
+.final-card::after{content:"";position:absolute;bottom:-40%;right:-10%;width:50%;height:160%;background:radial-gradient(circle,rgba(120,180,160,.18),transparent 60%)}
+.final-card>*{position:relative;z-index:2}
+.final-card h2{color:var(--paper);font-size:clamp(2rem,4vw,3.1rem);max-width:20ch;margin:0 auto 1rem}
+.final-card p{color:rgba(246,242,234,.82);font-size:1.12rem;max-width:46ch;margin:0 auto 2rem}
+.final-card .note{margin-top:1.3rem;font-family:var(--font-mono);font-size:.82rem;color:rgba(246,242,234,.6)}
+
+/* ---------- Footer ---------- */
+.site-footer{background:var(--forest-ink);color:rgba(246,242,234,.7);padding:clamp(56px,7vw,84px) 0 36px}
+.footer-grid{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:40px}
+.footer-brand .brand{color:var(--paper);margin-bottom:16px}
+.footer-brand .brand .tld{color:#E9A983}
+.footer-brand p{font-size:.95rem;max-width:30ch;line-height:1.6}
+.footer-col h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(246,242,234,.5);margin-bottom:16px;font-weight:500}
+.footer-col ul{list-style:none;display:grid;gap:11px}
+.footer-col a{font-size:.95rem;color:rgba(246,242,234,.78);transition:color .2s}
+.footer-col a:hover{color:var(--paper)}
+.footer-bottom{margin-top:clamp(44px,6vw,64px);padding-top:26px;border-top:1px solid rgba(246,242,234,.12);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:.85rem}
+.swiss{display:inline-flex;align-items:center;gap:9px}
+.swiss svg{width:16px;height:16px}
+
+/* ---------- Reveal animations ---------- */
+@keyframes heroUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.hero-anim{opacity:0;animation:heroUp .9s var(--ease) forwards}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .8s var(--ease), transform .8s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.stagger>*{opacity:0;transform:translateY(18px);transition:opacity .65s var(--ease), transform .65s var(--ease)}
+.stagger.in>*{opacity:1;transform:none}
+.stagger.in>*:nth-child(1){transition-delay:.04s}
+.stagger.in>*:nth-child(2){transition-delay:.1s}
+.stagger.in>*:nth-child(3){transition-delay:.16s}
+.stagger.in>*:nth-child(4){transition-delay:.22s}
+.stagger.in>*:nth-child(5){transition-delay:.28s}
+.stagger.in>*:nth-child(6){transition-delay:.34s}
+.stagger.in>*:nth-child(7){transition-delay:.4s}
+@media (prefers-reduced-motion:reduce){
+  .hero-anim,.reveal,.stagger>*{animation:none!important;opacity:1!important;transform:none!important;transition:none!important}
+}
+
+/* ---------- Admin panel ---------- */
+.admin-fab{
+  position:fixed;right:22px;bottom:22px;z-index:80;width:52px;height:52px;border-radius:50%;
+  background:var(--forest);color:var(--paper);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px -8px rgba(15,42,37,.6);transition:transform .3s var(--ease), background .3s;
+}
+.admin-fab:hover{transform:rotate(35deg) scale(1.06);background:var(--forest-deep)}
+.admin-fab svg{width:24px;height:24px}
+.admin-overlay{position:fixed;inset:0;z-index:90;background:rgba(15,30,27,.42);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:opacity .3s}
+.admin-overlay.open{opacity:1;visibility:visible}
+.admin-panel{
+  position:fixed;top:0;right:0;bottom:0;z-index:100;width:min(440px,94vw);background:var(--paper);
+  box-shadow:-20px 0 60px -20px rgba(15,42,37,.4);transform:translateX(100%);transition:transform .4s var(--ease);
+  display:flex;flex-direction:column;
+}
+.admin-panel.open{transform:none}
+.ap-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+.ap-head .t{font-family:var(--font-display);font-size:1.25rem}
+.ap-head .s{font-size:.82rem;color:var(--ink-soft);margin-top:2px}
+.ap-close{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .2s}
+.ap-close:hover{background:rgba(27,42,38,.05)}
+.ap-body{flex:1;overflow-y:auto;padding:18px 24px 24px}
+.ap-actions{flex:0 0 auto;padding:16px 24px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;background:var(--paper-2)}
+.ap-actions .btn{flex:1;min-width:130px;justify-content:center}
+.ap-actions .btn-sm{font-size:.85rem;padding:.7em 1em}
+.ap-hint{font-size:.78rem;color:var(--ink-soft);line-height:1.5;background:var(--sage);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:18px}
+.ap-hint b{color:var(--ink)}
+
+/* editor fields */
+.ed-section{border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:10px;background:var(--paper-2);overflow:hidden}
+.ed-section>summary{padding:14px 16px;font-weight:600;font-size:.95rem;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;color:var(--ink)}
+.ed-section>summary::-webkit-details-marker{display:none}
+.ed-section>summary::after{content:"+";font-family:var(--font-mono);color:var(--clay);font-size:1.1rem}
+.ed-section[open]>summary::after{content:"–"}
+.ed-section[open]>summary{border-bottom:1px solid var(--line)}
+.ed-fields{padding:14px 16px;display:grid;gap:14px}
+.ed-item{border:1px dashed var(--line);border-radius:var(--r-sm);padding:12px 14px;display:grid;gap:12px;background:var(--paper)}
+.ed-item-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--clay)}
+.ed-field{display:grid;gap:6px}
+.ed-label{font-size:.78rem;font-weight:600;color:var(--ink-soft)}
+.ed-field input[type=text],.ed-field textarea,.ed-field select{
+  width:100%;font-family:var(--font-body);font-size:.9rem;color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--paper);
+  transition:border-color .2s, box-shadow .2s;resize:vertical;
+}
+.ed-field input:focus,.ed-field textarea:focus,.ed-field select:focus{outline:none;border-color:var(--forest);box-shadow:0 0 0 3px rgba(31,74,67,.12)}
+.ed-field textarea{min-height:74px;line-height:1.5}
+.ed-check{display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--ink)}
+.ed-check input{width:18px;height:18px;accent-color:var(--forest)}
+
+/* lock screen */
+.ap-lock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;gap:14px}
+.ap-lock .lk-ico{width:56px;height:56px;border-radius:50%;background:var(--sage);color:var(--forest);display:flex;align-items:center;justify-content:center}
+.ap-lock h3{font-family:var(--font-display);font-size:1.3rem}
+.ap-lock p{font-size:.88rem;color:var(--ink-soft);max-width:30ch}
+.ap-lock .lk-form{display:flex;gap:8px;width:100%;max-width:280px;margin-top:6px}
+.ap-lock input{flex:1;border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-family:var(--font-body);font-size:.95rem}
+.ap-lock input:focus{outline:none;border-color:var(--forest);box-shadow:0 0 0 3px rgba(31,74,67,.12)}
+.ap-lock .err{color:var(--risk);font-size:.82rem;min-height:1.1em}
+
+/* toast */
+.toast{position:fixed;bottom:88px;right:22px;z-index:120;background:var(--forest-ink);color:var(--paper);padding:13px 20px;border-radius:12px;font-size:.9rem;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:opacity .3s, transform .3s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .hero-grid,.problem-grid,.ai-grid,.trust-grid{grid-template-columns:1fr}
+  .hero-text{max-width:100%}
+  .preview{max-width:480px}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .ai-grid{gap:44px}
+}
+@media (max-width:760px){
+  .nav-links{display:none}
+  .nav-burger{display:flex}
+  .nav-right .btn{display:none}
+  .mobile-menu{display:block;overflow:hidden;max-height:0;transition:max-height .4s var(--ease);background:rgba(246,242,234,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft)}
+  .mobile-menu.open{max-height:420px}
+  .mobile-menu .mm-inner{padding:14px 28px 24px;display:grid;gap:4px}
+  .mobile-menu a{padding:13px 0;border-bottom:1px solid var(--line-soft);color:var(--ink);font-weight:500}
+  .mobile-menu .btn{margin-top:14px;justify-content:center}
+  .cat-grid{grid-template-columns:1fr}
+  .price-grid{grid-template-columns:1fr;max-width:440px}
+  .stat .num{font-size:2rem;min-width:78px}
+  .footer-grid{grid-template-columns:1fr;gap:32px}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:10px}
+  .step{grid-template-columns:40px 1fr;gap:18px}
+  .step-node{width:40px;height:40px}
+  .timeline::before{left:19px}
+}
+</style>
+</head>
+<body id="top">
+
+<header id="site-header" class="site-header"></header>
+<div class="mobile-menu" id="mobile-menu"></div>
+<main id="main"></main>
+<footer id="site-footer" class="site-footer"></footer>
+
+<!-- Admin -->
+<button class="admin-fab" id="admin-fab" aria-label="Inhalte bearbeiten" title="Inhalte bearbeiten">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+</button>
+<div class="admin-overlay" id="admin-overlay"></div>
+<aside class="admin-panel" id="admin-panel" aria-hidden="true">
+  <div class="ap-head">
+    <div>
+      <div class="t">Inhalte verwalten</div>
+      <div class="s">Änderungen erscheinen sofort in der Vorschau</div>
+    </div>
+    <button class="ap-close" id="ap-close" aria-label="Schliessen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <!-- Lock -->
+  <div class="ap-lock" id="ap-lock">
+    <div class="lk-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+    <h3>Bearbeitungsmodus</h3>
+    <p>Bitte Zugangscode eingeben, um die Inhalte zu bearbeiten.</p>
+    <form class="lk-form" id="lk-form">
+      <input type="password" id="lk-input" placeholder="Code" autocomplete="off" aria-label="Zugangscode">
+      <button type="submit" class="btn btn-primary btn-sm">Öffnen</button>
+    </form>
+    <div class="err" id="lk-err"></div>
+  </div>
+
+  <!-- Editor -->
+  <div class="ap-body" id="ap-body" style="display:none">
+    <div class="ap-hint">Bearbeiten Sie Texte direkt unten – die Vorschau aktualisiert sich live. Zum dauerhaften Speichern <b>„Exportieren"</b> wählen und die <code>content.json</code> auf Ihren Server laden. Beim nächsten Laden zeigt die Seite Ihre Inhalte.</div>
+    <div id="editor"></div>
+  </div>
+  <div class="ap-actions" id="ap-actions" style="display:none">
+    <button class="btn btn-primary btn-sm" id="ap-export">Exportieren (JSON)</button>
+    <button class="btn btn-ghost btn-sm" id="ap-import">Importieren</button>
+    <button class="btn btn-ghost btn-sm" id="ap-reset">Zurücksetzen</button>
+    <input type="file" id="ap-file" accept="application/json,.json" hidden>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   1) INHALTE  —  einzige Datenquelle der Seite
+   Alles hier ist über das Admin-Panel bearbeitbar.
+   ============================================================ */
+const DEFAULT_CONTENT = {
+  brand: {
+    name: "diginachlass",
+    tld: ".ch",
+    ctaLabel: "Kostenlos starten",
+    nav: [
+      { label: "So funktioniert's", href: "#how" },
+      { label: "Funktionen", href: "#features" },
+      { label: "Preise", href: "#pricing" },
+      { label: "Wissen", href: "#footer" }
+    ]
+  },
+  hero: {
+    eyebrow: "KI-gestützter digitaler Nachlass",
+    titleLead: "Ihre digitalen Konten,",
+    titleAccent: "geordnet für den Ernstfall.",
+    subtitle: "diginachlass.ch hilft Ihnen, Ihre wichtigsten digitalen Konten in wenigen Minuten zu strukturieren – damit Ihre Angehörigen im Ernstfall nicht vor verschlossenen Türen stehen.",
+    primaryCta: "Jetzt kostenlos starten",
+    secondaryCta: "So funktioniert's",
+    note: "Keine Kreditkarte nötig · in wenigen Minuten startklar"
+  },
+  heroPreview: {
+    title: "Ihr Compendium",
+    items: [
+      { category: "Kommunikation", service: "Google · Apple Mail", status: "ok" },
+      { category: "Finanzen", service: "PayPal · Twint", status: "warn" },
+      { category: "Krypto", service: "Coinbase · Binance", status: "risk" },
+      { category: "Cloud", service: "Dropbox · OneDrive", status: "ok" },
+      { category: "Social Media", service: "Instagram · LinkedIn", status: "warn" }
+    ],
+    footLabel: "5 Konten erfasst",
+    aiLabel: "KI-Analyse aktiv"
+  },
+  problem: {
+    eyebrow: "Das Problem",
+    title: "Was passiert mit Ihren Konten, wenn Sie es nicht mehr selbst regeln können?",
+    body: "E-Mail, Banking, Fotos, Krypto, Abos – unser Leben ist digital geworden. Doch im Ernstfall fehlt Angehörigen meist der Überblick: Welche Konten gibt es? Wer hat Zugang? Was ist wichtig? Ohne Vorbereitung bleiben Konten gesperrt, Werte unerreichbar und Erinnerungen verloren.",
+    stats: [
+      { value: "90+", label: "digitale Konten besitzt eine Person im Durchschnitt" },
+      { value: "0", label: "Überblick haben Angehörige meist im Ernstfall" },
+      { value: "5 Min.", label: "genügen, um die wichtigsten Konten zu ordnen" }
+    ]
+  },
+  how: {
+    eyebrow: "So funktioniert's",
+    title: "In wenigen geführten Schritten zum digitalen Nachlass",
+    subtitle: "Statt komplizierter Formulare führt Sie unser KI-Wizard Schritt für Schritt – verständlich und in Ihrem Tempo.",
+    steps: [
+      { n: "01", title: "Dienste erkennen", desc: "Wählen Sie die Dienste aus, die Sie nutzen – von Google, Apple und Microsoft über PayPal, Twint und Revolut bis Netflix und Spotify." },
+      { n: "02", title: "Automatische Gruppierung", desc: "Die KI ordnet Ihre Dienste automatisch in Kategorien: Kommunikation, Social Media, Finanzen, Cloud, Krypto und Unterhaltung." },
+      { n: "03", title: "Priorisierung", desc: "Legen Sie pro Dienst fest, wie wichtig er für Ihre Angehörigen ist – niedrige, mittlere oder hohe Relevanz." },
+      { n: "04", title: "Zugang dokumentiert?", desc: "Halten Sie fest, ob der Zugang dokumentiert ist – ja, teilweise oder nein. So entstehen erste Risikoindikatoren." },
+      { n: "05", title: "Vertrauensperson", desc: "Hinterlegen Sie Name, Beziehung und optional die E-Mail einer Person Ihres Vertrauens." },
+      { n: "06", title: "KI-Analyse", desc: "Die KI erkennt Lücken: wichtige Konten ohne dokumentierten Zugang, Finanzkonten ohne Vertrauensperson oder Risiken bei Cloud, Social und Krypto." },
+      { n: "07", title: "Persönliches Compendium", desc: "Sie erhalten eine strukturierte Übersicht aller Konten – mit Relevanz, Status, Dokumentation und konkreten Hinweisen." }
+    ]
+  },
+  features: {
+    eyebrow: "Alle Lebensbereiche",
+    title: "Ein Ort für alle digitalen Konten",
+    subtitle: "diginachlass.ch deckt die sechs wichtigsten Kategorien Ihres digitalen Lebens ab.",
+    categories: [
+      { icon: "comm", name: "Kommunikation", desc: "E-Mail- und Messaging-Konten wie Google/Gmail, Apple und Microsoft." },
+      { icon: "social", name: "Social Media", desc: "Facebook, Instagram, TikTok und LinkedIn – Profile und Inhalte." },
+      { icon: "finance", name: "Finanzen", desc: "PayPal, Twint, Revolut und Bankzugänge im Überblick." },
+      { icon: "cloud", name: "Cloud", desc: "Dropbox, OneDrive und Co. – Dokumente, Fotos und Backups." },
+      { icon: "crypto", name: "Krypto", desc: "Binance, Coinbase und Wallets – oft unzugänglich ohne Vorbereitung." },
+      { icon: "play", name: "Unterhaltung", desc: "Netflix, Spotify und weitere Abos, die im Hintergrund weiterlaufen." }
+    ]
+  },
+  ai: {
+    eyebrow: "Die KI-Analyse",
+    title: "Intelligente Hinweise statt blinder Flecken",
+    subtitle: "Die KI prüft Ihre Angaben und zeigt, wo Handlungsbedarf besteht – bevor es zu spät ist.",
+    examples: [
+      { title: "Wichtige Konten ohne Zugang", desc: "Konten mit hoher Relevanz, für die kein Zugang dokumentiert ist." },
+      { title: "Finanzen ohne Vertrauensperson", desc: "Finanzkonten, für die noch keine verantwortliche Person definiert ist." },
+      { title: "Risiken bei Cloud, Social & Krypto", desc: "Potenzielle Risiken, die ohne Vorbereitung schwer aufzulösen sind." }
+    ],
+    uspTitle: "Warum diginachlass.ch?",
+    usp: [
+      "Moderne KI-gestützte Nutzerführung statt klassischer Formulare",
+      "Kombination aus Wissensplattform, KI-Wizard und persönlichem Compendium",
+      "Einfachheit, Übersicht und echte Nachlassorganisation"
+    ]
+  },
+  pricing: {
+    eyebrow: "Preise",
+    title: "Kostenlos starten, bei Bedarf erweitern",
+    subtitle: "Verschaffen Sie sich gratis einen Überblick – und schalten Sie das vollständige Compendium frei, wenn Sie bereit sind.",
+    plans: [
+      {
+        name: "Kostenlos", price: "CHF 0", period: "für immer",
+        desc: "Der einfache Einstieg in Ihren digitalen Nachlass.",
+        features: ["Geführter KI-Wizard", "Vorschau Ihres Compendiums", "Basisübersicht Ihrer Konten"],
+        cta: "Kostenlos starten", featured: false, badge: ""
+      },
+      {
+        name: "Premium", price: "CHF –", period: "einmalig / jährlich",
+        desc: "Das vollständige Werkzeug für umfassende Vorsorge.",
+        features: ["Vollständiges Compendium", "KI-Risikoanalyse", "Vollständigkeitsprüfung", "Exportfunktionen", "Verwaltung der Vertrauenspersonen"],
+        cta: "Premium freischalten", featured: true, badge: "Empfohlen"
+      }
+    ]
+  },
+  trust: {
+    eyebrow: "Vertrauensperson",
+    title: "Sie behalten die Kontrolle – immer",
+    body: "Sie entscheiden, wer im Ernstfall einbezogen wird. Hinterlegen Sie eine Vertrauensperson und definieren Sie, welche Bereiche wichtig sind. diginachlass.ch ist auf Einfachheit, Übersicht und Ihre Privatsphäre ausgelegt.",
+    points: [
+      { title: "Sie bestimmen Relevanz und Zuständigkeiten" },
+      { title: "Klare Übersicht für Ihre Angehörigen" },
+      { title: "In der Schweiz gedacht und gemacht" }
+    ]
+  },
+  finalCta: {
+    title: "Schaffen Sie heute Klarheit für morgen.",
+    subtitle: "Beginnen Sie in wenigen Minuten – kostenlos und unverbindlich.",
+    cta: "Jetzt kostenlos starten",
+    note: "Keine Kreditkarte nötig"
+  },
+  footer: {
+    tagline: "Digitaler Nachlass, einfach organisiert. KI-gestützt, übersichtlich und sicher.",
+    columns: [
+      { title: "Produkt", links: [ { label: "So funktioniert's", href: "#how" }, { label: "Funktionen", href: "#features" }, { label: "Preise", href: "#pricing" } ] },
+      { title: "Wissen", links: [ { label: "Google & Gmail", href: "#" }, { label: "Apple", href: "#" }, { label: "PayPal & Twint", href: "#" }, { label: "Krypto", href: "#" } ] },
+      { title: "Rechtliches", links: [ { label: "Impressum", href: "#" }, { label: "Datenschutz", href: "#" }, { label: "AGB", href: "#" } ] }
+    ],
+    copyright: "© 2026 diginachlass.ch"
+  }
+};
+
+/* ============================================================
+   2) Icons & Status
+   ============================================================ */
+const ICONS = {
+  comm:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>',
+  social: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="7" r="2.3"/><circle cx="12" cy="17.5" r="2.3"/><path d="M8.1 8.2 10.4 15.4M15.9 8.2 13.6 15.4M8.2 7h7.6"/></svg>',
+  finance:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.7"/><path d="M6 9.4v5.2M18 9.4v5.2"/></svg>',
+  cloud:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 18.5H7a4.2 4.2 0 0 1-.5-8.37A5.6 5.6 0 0 1 17.4 11.4a3.6 3.6 0 0 1 .1 7.1Z"/></svg>',
+  crypto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.4 20.3 7v10L12 21.6 3.7 17V7z"/><path d="M10 9.4h3.1a1.8 1.8 0 0 1 0 3.6H10zm0 0v6.2m0-2.6h3.4a1.8 1.8 0 0 1 0 3.6H10"/></svg>',
+  play:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M10 8.4 16 12l-6 3.6z" fill="currentColor" stroke="none"/></svg>'
+};
+const ICON_KEYS = Object.keys(ICONS);
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
+const SPARK = '<svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 13.6 9 20 10.5 13.6 12 12 18.5 10.4 12 4 10.5 10.4 9z"/></svg>';
+const STATUS = {
+  ok:   { c: "var(--ok)",   t: "Zugang dokumentiert" },
+  warn: { c: "var(--warn)", t: "Teilweise dokumentiert" },
+  risk: { c: "var(--risk)", t: "Kein Zugang dokumentiert" }
+};
+
+/* ============================================================
+   3) Helpers
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let content = clone(DEFAULT_CONTENT);
+
+function deepMerge(target, src){
+  if (typeof src !== "object" || src === null) return target;
+  for (const k of Object.keys(src)){
+    const sv = src[k];
+    if (sv && typeof sv === "object" && !Array.isArray(sv) &&
+        target[k] && typeof target[k] === "object" && !Array.isArray(target[k])){
+      deepMerge(target[k], sv);
+    } else {
+      target[k] = sv;
+    }
+  }
+  return target;
+}
+function getByPath(p){ let o = content; for (const k of p) o = o[k]; return o; }
+function setByPath(p, v){ let o = content; for (let i = 0; i < p.length - 1; i++) o = o[p[i]]; o[p[p.length - 1]] = v; }
+
+/* ============================================================
+   4) Rendering der Seite
+   ============================================================ */
+function brandMark(){
+  return '<svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--forest)"/><circle cx="16" cy="13" r="3.3" fill="var(--paper)"/><path d="M13.7 15.3h4.6l1.1 7.2h-6.8z" fill="var(--paper)"/></svg>';
+}
+function brandWordmark(){
+  return brandMark() + '<span>' + esc(content.brand.name) + '<span class="tld">' + esc(content.brand.tld) + '</span></span>';
+}
+
+function renderHeader(){
+  const c = content;
+  const links = c.brand.nav.map(l => '<a href="' + esc(l.href) + '">' + esc(l.label) + '</a>').join("");
+  $("#site-header").innerHTML =
+    '<div class="nav container">' +
+      '<a class="brand" href="#top">' + brandWordmark() + '</a>' +
+      '<nav class="nav-links">' + links + '</nav>' +
+      '<div class="nav-right">' +
+        '<a class="btn btn-primary btn-sm" href="#pricing">' + esc(c.brand.ctaLabel) + '</a>' +
+        '<button class="nav-burger" id="burger" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
+      '</div>' +
+    '</div>';
+
+  const mlinks = c.brand.nav.map(l => '<a href="' + esc(l.href) + '" class="mm-link">' + esc(l.label) + '</a>').join("");
+  $("#mobile-menu").innerHTML = '<div class="mm-inner">' + mlinks +
+    '<a class="btn btn-primary mm-link" href="#pricing">' + esc(c.brand.ctaLabel) + '</a></div>';
+}
+
+function renderMain(){
+  const c = content;
+
+  /* HERO */
+  const pvRows = c.heroPreview.items.map(it => {
+    const st = STATUS[it.status] || STATUS.ok;
+    return '<div class="pv-row">' +
+      '<span class="pv-cat">' + esc(it.category) + '</span>' +
+      '<span class="pv-svc">' + esc(it.service) + '</span>' +
+      '<span class="pv-status"><span class="dot" style="background:' + st.c + '" title="' + esc(st.t) + '"></span></span>' +
+    '</div>';
+  }).join("");
+
+  const hero =
+  '<section class="hero">' +
+    '<div class="hero-glow"></div>' +
+    '<div class="container hero-grid">' +
+      '<div class="hero-text">' +
+        '<span class="eyebrow hero-anim" style="animation-delay:.05s">' + esc(c.hero.eyebrow) + '</span>' +
+        '<h1 class="h-display hero-anim" style="animation-delay:.14s">' + esc(c.hero.titleLead) + ' <span class="accent">' + esc(c.hero.titleAccent) + '</span></h1>' +
+        '<p class="lede hero-anim" style="animation-delay:.24s">' + esc(c.hero.subtitle) + '</p>' +
+        '<div class="hero-actions hero-anim" style="animation-delay:.34s">' +
+          '<a class="btn btn-primary" href="#pricing">' + esc(c.hero.primaryCta) + ' <span class="arr">→</span></a>' +
+          '<a class="btn btn-ghost" href="#how">' + esc(c.hero.secondaryCta) + '</a>' +
+        '</div>' +
+        '<div class="hero-note hero-anim" style="animation-delay:.44s"><span class="check">' + CHECK + '</span>' + esc(c.hero.note) + '</div>' +
+      '</div>' +
+      '<div class="preview hero-anim" style="animation-delay:.3s">' +
+        '<div class="preview-head"><span class="pv-title">' + esc(c.heroPreview.title) + '</span><span class="pv-dots"><i></i><i></i><i></i></span></div>' +
+        '<div class="preview-body">' + pvRows + '</div>' +
+        '<div class="preview-foot"><span>' + esc(c.heroPreview.footLabel) + '</span><span class="ai-tag">' + SPARK + esc(c.heroPreview.aiLabel) + '</span></div>' +
+      '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* PROBLEM */
+  const stats = c.problem.stats.map(s =>
+    '<div class="stat"><span class="num">' + esc(s.value) + '</span><span class="lbl">' + esc(s.label) + '</span></div>'
+  ).join("");
+  const problem =
+  '<section class="problem sec-pad" id="problem">' +
+    '<div class="container problem-grid">' +
+      '<div class="problem-body reveal">' +
+        '<span class="eyebrow">' + esc(c.problem.eyebrow) + '</span>' +
+        '<h2 class="h-sec">' + esc(c.problem.title) + '</h2>' +
+        '<p>' + esc(c.problem.body) + '</p>' +
+      '</div>' +
+      '<div class="stats stagger reveal">' + stats + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* HOW */
+  const steps = c.how.steps.map(s =>
+    '<div class="step">' +
+      '<div class="step-node">' + esc(s.n) + '</div>' +
+      '<div class="step-c"><h3>' + esc(s.title) + '</h3><p>' + esc(s.desc) + '</p></div>' +
+    '</div>'
+  ).join("");
+  const how =
+  '<section class="how sec-pad" id="how">' +
+    '<div class="container">' +
+      '<div class="how-head reveal">' +
+        '<span class="eyebrow">' + esc(c.how.eyebrow) + '</span>' +
+        '<h2 class="h-sec">' + esc(c.how.title) + '</h2>' +
+        '<p class="lede" style="margin-top:1.2rem">' + esc(c.how.subtitle) + '</p>' +
+      '</div>' +
+      '<div class="timeline stagger reveal">' + steps + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* FEATURES */
+  const cats = c.features.categories.map(cat =>
+    '<div class="cat"><div class="cat-ico">' + (ICONS[cat.icon] || ICONS.comm) + '</div>' +
+    '<h3>' + esc(cat.name) + '</h3><p>' + esc(cat.desc) + '</p></div>'
+  ).join("");
+  const features =
+  '<section class="features sec-pad" id="features">' +
+    '<div class="container">' +
+      '<div class="how-head reveal" style="text-align:center;max-width:46rem;margin-left:auto;margin-right:auto">' +
+        '<span class="eyebrow center">' + esc(c.features.eyebrow) + '</span>' +
+        '<h2 class="h-sec center">' + esc(c.features.title) + '</h2>' +
+        '<p class="lede center" style="margin-top:1.2rem">' + esc(c.features.subtitle) + '</p>' +
+      '</div>' +
+      '<div class="cat-grid stagger reveal">' + cats + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* AI */
+  const exs = c.ai.examples.map(e =>
+    '<div class="ai-card"><span class="flag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>' +
+    '<div><h3>' + esc(e.title) + '</h3><p>' + esc(e.desc) + '</p></div></div>'
+  ).join("");
+  const usps = c.ai.usp.map(u => '<li><span class="tick">' + CHECK + '</span><span>' + esc(u) + '</span></li>').join("");
+  const ai =
+  '<section class="ai sec-pad" id="analysis">' +
+    '<div class="container ai-grid">' +
+      '<div class="reveal">' +
+        '<span class="eyebrow light">' + esc(c.ai.eyebrow) + '</span>' +
+        '<h2 class="h-sec">' + esc(c.ai.title) + '</h2>' +
+        '<p class="lede" style="margin:1.2rem 0 2rem">' + esc(c.ai.subtitle) + '</p>' +
+        '<div class="usp"><h3>' + esc(c.ai.uspTitle) + '</h3><ul>' + usps + '</ul></div>' +
+      '</div>' +
+      '<div class="ai-examples stagger reveal">' + exs + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* PRICING */
+  const plans = c.pricing.plans.map(p => {
+    const badge = p.featured && p.badge ? '<div class="plan-badge">' + esc(p.badge) + '</div>' : "";
+    const feats = (p.features || []).map(f => '<li><span class="pt">' + CHECK + '</span><span>' + esc(f) + '</span></li>').join("");
+    const btnClass = p.featured ? "btn btn-primary" : "btn btn-ghost";
+    return '<div class="plan' + (p.featured ? " featured" : "") + '">' + badge +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<p class="p-desc">' + esc(p.desc) + '</p>' +
+      '<div class="p-price"><span class="amt">' + esc(p.price) + '</span><span class="per">' + esc(p.period) + '</span></div>' +
+      '<ul>' + feats + '</ul>' +
+      '<a class="' + btnClass + '" href="#">' + esc(p.cta) + '</a>' +
+    '</div>';
+  }).join("");
+  const pricing =
+  '<section class="pricing sec-pad" id="pricing">' +
+    '<div class="container">' +
+      '<div class="how-head reveal" style="text-align:center;max-width:44rem;margin-left:auto;margin-right:auto">' +
+        '<span class="eyebrow center">' + esc(c.pricing.eyebrow) + '</span>' +
+        '<h2 class="h-sec center">' + esc(c.pricing.title) + '</h2>' +
+        '<p class="lede center" style="margin-top:1.2rem">' + esc(c.pricing.subtitle) + '</p>' +
+      '</div>' +
+      '<div class="price-grid stagger reveal">' + plans + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* TRUST */
+  const tShield = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v6c0 4.5 3.2 7.6 7.5 9.5 4.3-1.9 7.5-5 7.5-9.5v-6z"/><path d="m9 12 2 2 4-4"/></svg>';
+  const tps = c.trust.points.map(p =>
+    '<div class="trust-point"><span class="tp-ico">' + tShield + '</span><span>' + esc(p.title) + '</span></div>'
+  ).join("");
+  const trust =
+  '<section class="trust sec-pad" id="trust">' +
+    '<div class="container trust-grid">' +
+      '<div class="trust-body reveal">' +
+        '<span class="eyebrow">' + esc(c.trust.eyebrow) + '</span>' +
+        '<h2 class="h-sec">' + esc(c.trust.title) + '</h2>' +
+        '<p>' + esc(c.trust.body) + '</p>' +
+      '</div>' +
+      '<div class="trust-points stagger reveal">' + tps + '</div>' +
+    '</div>' +
+  '</section>';
+
+  /* FINAL CTA */
+  const final =
+  '<section class="final sec-pad">' +
+    '<div class="container">' +
+      '<div class="final-card reveal">' +
+        '<h2>' + esc(c.finalCta.title) + '</h2>' +
+        '<p>' + esc(c.finalCta.subtitle) + '</p>' +
+        '<a class="btn btn-light" href="#pricing">' + esc(c.finalCta.cta) + ' <span class="arr">→</span></a>' +
+        '<div class="note">' + esc(c.finalCta.note) + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</section>';
+
+  $("#main").innerHTML = hero + problem + how + features + ai + pricing + trust + final;
+}
+
+function renderFooter(){
+  const c = content;
+  const swissCross = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="2.5" fill="#D8232A"/><path d="M7 3.4h2v2.6h2.6v2H9v2.6H7V8H4.4V6H7z" fill="#fff"/></svg>';
+  const cols = c.footer.columns.map(col => {
+    const links = col.links.map(l => '<li><a href="' + esc(l.href) + '">' + esc(l.label) + '</a></li>').join("");
+    return '<div class="footer-col"><h4>' + esc(col.title) + '</h4><ul>' + links + '</ul></div>';
+  }).join("");
+  $("#site-footer").innerHTML =
+    '<div class="container" id="footer">' +
+      '<div class="footer-grid">' +
+        '<div class="footer-brand"><a class="brand" href="#top">' + brandWordmark() + '</a><p>' + esc(c.footer.tagline) + '</p></div>' +
+        cols +
+      '</div>' +
+      '<div class="footer-bottom"><span>' + esc(c.footer.copyright) + '</span>' +
+        '<span class="swiss">' + swissCross + ' Made in Switzerland</span>' +
+      '</div>' +
+    '</div>';
+}
+
+/* Reveal on scroll */
+let io;
+function setupReveal(){
+  if (io) io.disconnect();
+  io = new IntersectionObserver((entries) => {
+    entries.forEach(en => { if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+}
+
+/* Navigation behaviour */
+function wireNav(){
+  const burger = $("#burger");
+  const menu = $("#mobile-menu");
+  if (burger){
+    burger.addEventListener("click", () => menu.classList.toggle("open"));
+  }
+  document.querySelectorAll(".mm-link").forEach(a =>
+    a.addEventListener("click", () => menu.classList.remove("open"))
+  );
+}
+
+let rerenderTimer;
+function renderAll(){
+  renderHeader();
+  renderMain();
+  renderFooter();
+  wireNav();
+  setupReveal();
+}
+function liveRerender(){
+  clearTimeout(rerenderTimer);
+  rerenderTimer = setTimeout(renderAll, 130);
+}
+
+/* ============================================================
+   5) Admin-Panel: Editor automatisch aus den Daten erzeugen
+   ============================================================ */
+const SECTION_LABELS = {
+  brand: "Marke & Navigation", hero: "Hero (Startbereich)", heroPreview: "Hero-Vorschau (Compendium)",
+  problem: "Problem", how: "So funktioniert's", features: "Funktionen / Kategorien",
+  ai: "KI-Analyse & USP", pricing: "Preise", trust: "Vertrauensperson",
+  finalCta: "Abschluss-Aufruf", footer: "Footer"
+};
+const LABELS = {
+  name: "Name", tld: "Domain-Endung", ctaLabel: "Button-Text", title: "Titel", titleLead: "Titel (Anfang)",
+  titleAccent: "Titel (Akzent, kursiv)", subtitle: "Untertitel", body: "Text", eyebrow: "Label (klein)",
+  desc: "Beschreibung", primaryCta: "Button primär", secondaryCta: "Button sekundär", note: "Hinweis",
+  footLabel: "Fusszeile", aiLabel: "KI-Label", value: "Wert", label: "Bezeichnung", href: "Link (URL)",
+  price: "Preis", period: "Zeitraum", cta: "Button-Text", featured: "Hervorheben", badge: "Badge",
+  category: "Kategorie", service: "Dienst(e)", status: "Status", icon: "Icon", uspTitle: "USP-Überschrift",
+  tagline: "Slogan", copyright: "Copyright", n: "Nummer"
+};
+const ITEM_LABELS = {
+  nav: "Navigationspunkt", items: "Eintrag", stats: "Kennzahl", steps: "Schritt", categories: "Kategorie",
+  examples: "Beispiel", usp: "USP-Punkt", plans: "Plan", features: "Funktion", points: "Punkt",
+  columns: "Spalte", links: "Link"
+};
+function humanize(k){ return (LABELS[k] || k.replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase())); }
+
+function makeField(path, label, value){
+  const key = path[path.length - 1];
+  const wrap = document.createElement(key === "featured" ? "div" : "label");
+  wrap.className = key === "featured" ? "ed-check" : "ed-field";
+  let input;
+
+  if (key === "featured"){
+    input = document.createElement("input");
+    input.type = "checkbox"; input.checked = !!value;
+    const span = document.createElement("span"); span.textContent = label;
+    input.addEventListener("change", () => { setByPath(path, input.checked); liveRerender(); });
+    wrap.appendChild(input); wrap.appendChild(span);
+    return wrap;
+  }
+
+  const span = document.createElement("span");
+  span.className = "ed-label"; span.textContent = label;
+  wrap.appendChild(span);
+
+  if (key === "status"){
+    input = document.createElement("select");
+    [["ok","Zugang dokumentiert"],["warn","Teilweise dokumentiert"],["risk","Kein Zugang"]].forEach(([v,t]) => {
+      const o = document.createElement("option"); o.value = v; o.textContent = t; if (v === value) o.selected = true; input.appendChild(o);
+    });
+  } else if (key === "icon"){
+    input = document.createElement("select");
+    ICON_KEYS.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; if (v === value) o.selected = true; input.appendChild(o); });
+  } else if (typeof value === "string" && value.length > 55){
+    input = document.createElement("textarea");
+    input.value = value;
+  } else {
+    input = document.createElement("input");
+    input.type = "text"; input.value = value;
+  }
+  input.addEventListener("input", () => { setByPath(path, input.value); liveRerender(); });
+  input.addEventListener("change", () => { setByPath(path, input.value); liveRerender(); });
+  wrap.appendChild(input);
+  return wrap;
+}
+
+function walk(obj, path, container){
+  if (Array.isArray(obj)){
+    const parentKey = path[path.length - 1];
+    obj.forEach((item, i) => {
+      if (item && typeof item === "object"){
+        const grp = document.createElement("div"); grp.className = "ed-item";
+        const t = document.createElement("div"); t.className = "ed-item-title";
+        t.textContent = (ITEM_LABELS[parentKey] || "Eintrag") + " " + (i + 1);
+        grp.appendChild(t);
+        walk(item, path.concat(i), grp);
+        container.appendChild(grp);
+      } else {
+        container.appendChild(makeField(path.concat(i), (ITEM_LABELS[parentKey] || "Punkt") + " " + (i + 1), item));
+      }
+    });
+  } else if (obj && typeof obj === "object"){
+    Object.keys(obj).forEach(k => walk(obj[k], path.concat(k), container));
+  } else {
+    container.appendChild(makeField(path, humanize(path[path.length - 1]), obj));
+  }
+}
+
+function buildEditor(){
+  const root = $("#editor");
+  root.innerHTML = "";
+  Object.keys(content).forEach((topKey, idx) => {
+    const det = document.createElement("details");
+    det.className = "ed-section";
+    if (idx === 0) det.open = true;
+    const sum = document.createElement("summary");
+    sum.textContent = SECTION_LABELS[topKey] || topKey;
+    det.appendChild(sum);
+    const fields = document.createElement("div");
+    fields.className = "ed-fields";
+    walk(content[topKey], [topKey], fields);
+    det.appendChild(fields);
+    root.appendChild(det);
+  });
+}
+
+/* ============================================================
+   6) Admin-Steuerung (öffnen, Code, Export/Import/Reset)
+   ============================================================ */
+const ADMIN_PASS = "1234"; // Hinweis: einfacher Schutz für die Vorschau – für den Live-Betrieb echte Auth (siehe Doku) verwenden.
+let unlocked = false;
+
+function openPanel(){
+  $("#admin-overlay").classList.add("open");
+  $("#admin-panel").classList.add("open");
+  $("#admin-panel").setAttribute("aria-hidden", "false");
+  if (!unlocked){ setTimeout(() => $("#lk-input").focus(), 350); }
+}
+function closePanel(){
+  $("#admin-overlay").classList.remove("open");
+  $("#admin-panel").classList.remove("open");
+  $("#admin-panel").setAttribute("aria-hidden", "true");
+}
+function unlock(){
+  unlocked = true;
+  $("#ap-lock").style.display = "none";
+  $("#ap-body").style.display = "block";
+  $("#ap-actions").style.display = "flex";
+  buildEditor();
+}
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove("show"), 2400);
+}
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "content.json"; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast("content.json exportiert");
+}
+function wireAdmin(){
+  $("#admin-fab").addEventListener("click", openPanel);
+  $("#ap-close").addEventListener("click", closePanel);
+  $("#admin-overlay").addEventListener("click", closePanel);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+
+  $("#lk-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if ($("#lk-input").value === ADMIN_PASS){ $("#lk-err").textContent = ""; unlock(); }
+    else { $("#lk-err").textContent = "Falscher Code."; }
+  });
+
+  $("#ap-export").addEventListener("click", exportJSON);
+  $("#ap-import").addEventListener("click", () => $("#ap-file").click());
+  $("#ap-file").addEventListener("change", (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    file.text().then(txt => {
+      try {
+        const data = JSON.parse(txt);
+        content = deepMerge(clone(DEFAULT_CONTENT), data);
+        renderAll(); buildEditor(); toast("Inhalte importiert");
+      } catch (err){ toast("Ungültige JSON-Datei"); }
+      e.target.value = "";
+    });
+  });
+  $("#ap-reset").addEventListener("click", () => {
+    if (confirm("Alle Inhalte auf den Standard zurücksetzen?")){
+      content = clone(DEFAULT_CONTENT); renderAll(); buildEditor(); toast("Auf Standard zurückgesetzt");
+    }
+  });
+}
+
+/* Header shadow on scroll */
+function wireScroll(){
+  const h = $("#site-header");
+  const onScroll = () => h.classList.toggle("scrolled", window.scrollY > 12);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+}
+
+/* ============================================================
+   7) Init  —  versucht content.json zu laden (für Live-Betrieb)
+   ============================================================ */
+async function init(){
+  try {
+    const r = await fetch("content.json", { cache: "no-store" });
+    if (r.ok){
+      const data = await r.json();
+      content = deepMerge(clone(DEFAULT_CONTENT), data);
+    }
+  } catch (e){
+    /* keine content.json vorhanden (z.B. Vorschau) -> Standardinhalte */
+  }
+  renderAll();
+  wireAdmin();
+  wireScroll();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
