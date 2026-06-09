@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mein Konto – diginachlass.ch</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<header class="nav"><div class="nav-inner">
+  <a class="brand" href="/">diginachlass<span class="tld">.ch</span></a>
+  <nav class="nav-links">
+    <a href="/">Startseite</a>
+    <span id="plan-badge" class="badge free">…</span>
+    <a href="#" id="logout">Abmelden</a>
+  </nav>
+</div></header>
+
+<main>
+  <span class="eyebrow">Mein Konto</span>
+  <h1 id="hello">Willkommen</h1>
+  <p class="lede" id="verify-note" style="display:none"></p>
+  <div class="alert" id="alert"></div>
+
+  <!-- Compendium -->
+  <div class="card">
+    <h2>Compendium</h2>
+    <div id="compendium"><p class="muted">Wird geladen …</p></div>
+  </div>
+
+  <!-- Dienste -->
+  <div class="card">
+    <h2>Meine Dienste</h2>
+    <p class="muted">Erfassen Sie Ihre digitalen Konten – nur Metadaten, niemals Passwörter oder Zugangsdaten.</p>
+    <div id="accounts-list" style="margin-top:14px"></div>
+    <div class="sep"></div>
+    <form id="account-form">
+      <div class="row">
+        <div class="field" style="flex:2"><label>Dienst</label><input type="text" id="svc-name" placeholder="z. B. Google / Gmail" required></div>
+        <div class="field"><label>Kategorie</label>
+          <select id="svc-cat">
+            <option value="kommunikation">Kommunikation</option>
+            <option value="social_media">Social Media</option>
+            <option value="finanzen">Finanzen</option>
+            <option value="cloud">Cloud</option>
+            <option value="krypto">Krypto</option>
+            <option value="unterhaltung">Unterhaltung</option>
+            <option value="sonstiges">Sonstiges</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Relevanz</label>
+          <select id="svc-rel"><option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select>
+        </div>
+        <div class="field"><label>Zugang dokumentiert?</label>
+          <select id="svc-doc"><option value="nein" selected>nein</option><option value="teilweise">teilweise</option><option value="ja">ja</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Notizen <span class="muted">(keine Passwörter!)</span></label><textarea id="svc-notes" placeholder="Hinweise für Angehörige – ohne Zugangsdaten"></textarea></div>
+      <button class="btn btn-primary btn-sm" type="submit">Dienst hinzufügen</button>
+    </form>
+  </div>
+
+  <!-- Vertrauenspersonen (Premium) -->
+  <div class="card">
+    <h2>Vertrauenspersonen <span class="badge premium" style="font-size:.66rem">Premium</span></h2>
+    <div id="trusted-section"><p class="muted">Wird geladen …</p></div>
+  </div>
+
+  <!-- Abrechnung -->
+  <div class="card">
+    <h2>Abrechnung &amp; Premium</h2>
+    <p id="billing-text" class="muted">Wird geladen …</p>
+    <div class="row" style="margin-top:12px">
+      <a class="btn btn-clay" id="upgrade-link" href="/app/upgrade.html" style="display:none">Premium freischalten</a>
+      <button class="btn btn-ghost" id="portal-btn" style="display:none">Abo verwalten (Stripe)</button>
+      <button class="btn btn-ghost" id="cancel-btn" style="display:none">Abo kündigen</button>
+    </div>
+  </div>
+
+  <!-- Sicherheit -->
+  <div class="card">
+    <h2>Profil &amp; Sicherheit</h2>
+    <form id="profile-form" style="margin-top:12px">
+      <div class="field"><label>Name</label><input type="text" id="pf-name"></div>
+      <div class="field"><label>E-Mail-Adresse</label><input type="email" id="pf-email"></div>
+      <div class="field"><label>Neues Passwort <span class="muted">(optional)</span></label><input type="password" id="pf-newpw" autocomplete="new-password"></div>
+      <div class="field"><label>Aktuelles Passwort <span class="muted">(bei E-Mail-/Passwortänderung)</span></label><input type="password" id="pf-curpw" autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-sm" type="submit">Änderungen speichern</button>
+    </form>
+
+    <div class="sep"></div>
+    <h2 style="font-size:1.05rem">Zwei-Faktor-Authentifizierung (2FA)</h2>
+    <div id="twofa-section"><p class="muted">Wird geladen …</p></div>
+  </div>
+
+  <!-- Daten & Datenschutz -->
+  <div class="card">
+    <h2>Daten &amp; Datenschutz</h2>
+    <p class="muted">Recht auf Auskunft und Löschung (revDSG / DSGVO).</p>
+    <div class="row" style="margin-top:12px">
+      <a class="btn btn-ghost" href="/api/account/export">Meine Daten exportieren (JSON)</a>
+    </div>
+    <div class="sep"></div>
+    <h2 style="font-size:1.05rem;color:var(--risk)">Konto löschen</h2>
+    <p class="muted">Permanent. Löscht alle Daten und kündigt ein laufendes Abo.</p>
+    <form id="delete-form" style="margin-top:12px">
+      <div class="row">
+        <div class="field"><label>Passwort</label><input type="password" id="del-pw" autocomplete="current-password"></div>
+        <div class="field"><label>Tippen Sie LÖSCHEN</label><input type="text" id="del-confirm" placeholder="LÖSCHEN"></div>
+      </div>
+      <button class="btn btn-ghost" type="submit" style="border-color:var(--risk);color:var(--risk)">Konto endgültig löschen</button>
+    </form>
+  </div>
+</main>
+
+<footer class="foot">© 2026 diginachlass.ch · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a></footer>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/account.js"></script>
+</body>
+</html>

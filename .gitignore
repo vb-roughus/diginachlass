@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Secrets & local config — NIEMALS committen
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+.vitest/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Prisma local artifacts
+prisma/*.db
+
+# Local Postgres data (Test-Setup)
+/tmp/pgdata/

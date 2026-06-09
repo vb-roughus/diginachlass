@@ -121,7 +121,9 @@ h1,h2,h3{font-family:var(--font-display);font-weight:500;line-height:1.05;letter
 .nav-links a::after{content:"";position:absolute;left:0;right:100%;bottom:-5px;height:1.5px;background:var(--clay);transition:right .3s var(--ease)}
 .nav-links a:hover{color:var(--ink)}
 .nav-links a:hover::after{right:0}
-.nav-right{display:flex;align-items:center;gap:12px}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-login{font-size:.95rem;color:var(--ink-soft);font-weight:500;transition:color .2s}
+.nav-login:hover{color:var(--ink)}
 .nav-burger{display:none;width:42px;height:42px;border-radius:var(--r-sm);border:1px solid var(--line);align-items:center;justify-content:center;color:var(--ink)}
 .mobile-menu{display:none}
 
@@ -397,14 +399,15 @@ h1,h2,h3{font-family:var(--font-display);font-weight:500;line-height:1.05;letter
     </button>
   </div>
 
-  <!-- Lock -->
+  <!-- Lock: echte Administrator-Anmeldung (Rolle "admin") -->
   <div class="ap-lock" id="ap-lock">
     <div class="lk-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
-    <h3>Bearbeitungsmodus</h3>
-    <p>Bitte Zugangscode eingeben, um die Inhalte zu bearbeiten.</p>
-    <form class="lk-form" id="lk-form">
-      <input type="password" id="lk-input" placeholder="Code" autocomplete="off" aria-label="Zugangscode">
-      <button type="submit" class="btn btn-primary btn-sm">Öffnen</button>
+    <h3>Administrator-Anmeldung</h3>
+    <p>Bitte melden Sie sich mit Ihrem Administrator-Konto an, um die Inhalte zu bearbeiten.</p>
+    <form class="lk-form" id="lk-form" style="flex-direction:column;max-width:280px">
+      <input type="email" id="lk-email" placeholder="E-Mail" autocomplete="username" aria-label="E-Mail" style="flex:none;width:100%">
+      <input type="password" id="lk-input" placeholder="Passwort" autocomplete="current-password" aria-label="Passwort" style="flex:none;width:100%">
+      <button type="submit" class="btn btn-primary btn-sm" style="width:100%">Anmelden</button>
     </form>
     <div class="err" id="lk-err"></div>
   </div>
@@ -555,7 +558,7 @@ const DEFAULT_CONTENT = {
     columns: [
       { title: "Produkt", links: [ { label: "So funktioniert's", href: "#how" }, { label: "Funktionen", href: "#features" }, { label: "Preise", href: "#pricing" } ] },
       { title: "Wissen", links: [ { label: "Google & Gmail", href: "#" }, { label: "Apple", href: "#" }, { label: "PayPal & Twint", href: "#" }, { label: "Krypto", href: "#" } ] },
-      { title: "Rechtliches", links: [ { label: "Impressum", href: "#" }, { label: "Datenschutz", href: "#" }, { label: "AGB", href: "#" } ] }
+      { title: "Rechtliches", links: [ { label: "Impressum", href: "/impressum.html" }, { label: "Datenschutz", href: "/datenschutz.html" }, { label: "AGB", href: "#" } ] }
     ],
     copyright: "© 2026 diginachlass.ch"
   }
@@ -623,14 +626,16 @@ function renderHeader(){
       '<a class="brand" href="#top">' + brandWordmark() + '</a>' +
       '<nav class="nav-links">' + links + '</nav>' +
       '<div class="nav-right">' +
-        '<a class="btn btn-primary btn-sm" href="#pricing">' + esc(c.brand.ctaLabel) + '</a>' +
+        '<a class="nav-login" href="/app/login.html">Anmelden</a>' +
+        '<a class="btn btn-primary btn-sm" href="/app/register.html">' + esc(c.brand.ctaLabel) + '</a>' +
         '<button class="nav-burger" id="burger" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
       '</div>' +
     '</div>';
 
   const mlinks = c.brand.nav.map(l => '<a href="' + esc(l.href) + '" class="mm-link">' + esc(l.label) + '</a>').join("");
   $("#mobile-menu").innerHTML = '<div class="mm-inner">' + mlinks +
-    '<a class="btn btn-primary mm-link" href="#pricing">' + esc(c.brand.ctaLabel) + '</a></div>';
+    '<a class="mm-link" href="/app/login.html">Anmelden</a>' +
+    '<a class="btn btn-primary mm-link" href="/app/register.html">' + esc(c.brand.ctaLabel) + '</a></div>';
 }
 
 function renderMain(){
@@ -655,7 +660,7 @@ function renderMain(){
         '<h1 class="h-display hero-anim" style="animation-delay:.14s">' + esc(c.hero.titleLead) + ' <span class="accent">' + esc(c.hero.titleAccent) + '</span></h1>' +
         '<p class="lede hero-anim" style="animation-delay:.24s">' + esc(c.hero.subtitle) + '</p>' +
         '<div class="hero-actions hero-anim" style="animation-delay:.34s">' +
-          '<a class="btn btn-primary" href="#pricing">' + esc(c.hero.primaryCta) + ' <span class="arr">→</span></a>' +
+          '<a class="btn btn-primary" href="/app/register.html">' + esc(c.hero.primaryCta) + ' <span class="arr">→</span></a>' +
           '<a class="btn btn-ghost" href="#how">' + esc(c.hero.secondaryCta) + '</a>' +
         '</div>' +
         '<div class="hero-note hero-anim" style="animation-delay:.44s"><span class="check">' + CHECK + '</span>' + esc(c.hero.note) + '</div>' +
@@ -744,12 +749,14 @@ function renderMain(){
     const badge = p.featured && p.badge ? '<div class="plan-badge">' + esc(p.badge) + '</div>' : "";
     const feats = (p.features || []).map(f => '<li><span class="pt">' + CHECK + '</span><span>' + esc(f) + '</span></li>').join("");
     const btnClass = p.featured ? "btn btn-primary" : "btn btn-ghost";
+    // Free -> Registrierung; Premium -> Upgrade/Checkout (Abo & Einmalzahlung).
+    const ctaHref = p.featured ? "/app/upgrade.html" : "/app/register.html";
     return '<div class="plan' + (p.featured ? " featured" : "") + '">' + badge +
       '<h3>' + esc(p.name) + '</h3>' +
       '<p class="p-desc">' + esc(p.desc) + '</p>' +
       '<div class="p-price"><span class="amt">' + esc(p.price) + '</span><span class="per">' + esc(p.period) + '</span></div>' +
       '<ul>' + feats + '</ul>' +
-      '<a class="' + btnClass + '" href="#">' + esc(p.cta) + '</a>' +
+      '<a class="' + btnClass + '" href="' + ctaHref + '">' + esc(p.cta) + '</a>' +
     '</div>';
   }).join("");
   const pricing =
@@ -788,7 +795,7 @@ function renderMain(){
       '<div class="final-card reveal">' +
         '<h2>' + esc(c.finalCta.title) + '</h2>' +
         '<p>' + esc(c.finalCta.subtitle) + '</p>' +
-        '<a class="btn btn-light" href="#pricing">' + esc(c.finalCta.cta) + ' <span class="arr">→</span></a>' +
+        '<a class="btn btn-light" href="/app/register.html">' + esc(c.finalCta.cta) + ' <span class="arr">→</span></a>' +
         '<div class="note">' + esc(c.finalCta.note) + '</div>' +
       '</div>' +
     '</div>' +
@@ -959,14 +966,41 @@ function buildEditor(){
 /* ============================================================
    6) Admin-Steuerung (öffnen, Code, Export/Import/Reset)
    ============================================================ */
-const ADMIN_PASS = "1234"; // Hinweis: einfacher Schutz für die Vorschau – für den Live-Betrieb echte Auth (siehe Doku) verwenden.
+// Echte Authentifizierung gegen das Backend (Rolle "admin") — ersetzt das
+// frühere Prototyp-Passcode-Gate.
 let unlocked = false;
+let _csrf = null;
 
-function openPanel(){
+async function adminCsrf(){
+  if (_csrf) return _csrf;
+  const r = await fetch("/api/csrf", { credentials: "same-origin" });
+  _csrf = (await r.json()).csrfToken;
+  return _csrf;
+}
+async function isAdmin(){
+  try {
+    const r = await fetch("/api/admin/me", { credentials: "same-origin" });
+    return r.ok;
+  } catch (e){ return false; }
+}
+async function adminLogin(email, password){
+  const token = await adminCsrf();
+  return fetch("/api/auth/login", {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "x-csrf-token": token },
+    body: JSON.stringify({ email, password })
+  });
+}
+
+async function openPanel(){
   $("#admin-overlay").classList.add("open");
   $("#admin-panel").classList.add("open");
   $("#admin-panel").setAttribute("aria-hidden", "false");
-  if (!unlocked){ setTimeout(() => $("#lk-input").focus(), 350); }
+  if (!unlocked){
+    // Bereits als Admin angemeldet? Dann direkt entsperren.
+    if (await isAdmin()){ unlock(); }
+    else { setTimeout(() => $("#lk-email").focus(), 350); }
+  }
 }
 function closePanel(){
   $("#admin-overlay").classList.remove("open");
@@ -998,10 +1032,22 @@ function wireAdmin(){
   $("#admin-overlay").addEventListener("click", closePanel);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
 
-  $("#lk-form").addEventListener("submit", (e) => {
+  $("#lk-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if ($("#lk-input").value === ADMIN_PASS){ $("#lk-err").textContent = ""; unlock(); }
-    else { $("#lk-err").textContent = "Falscher Code."; }
+    $("#lk-err").textContent = "";
+    const email = $("#lk-email").value.trim();
+    const password = $("#lk-input").value;
+    try {
+      const r = await adminLogin(email, password);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok){ $("#lk-err").textContent = data.error || "Anmeldung fehlgeschlagen."; return; }
+      if (data.twoFactorRequired){
+        $("#lk-err").textContent = "2FA aktiv – bitte über die Konto-Seite anmelden und Panel erneut öffnen.";
+        return;
+      }
+      if (await isAdmin()){ $("#lk-err").textContent = ""; unlock(); }
+      else { $("#lk-err").textContent = "Dieses Konto hat keine Administrator-Rechte."; }
+    } catch (err){ $("#lk-err").textContent = "Netzwerkfehler. Läuft das Backend?"; }
   });
 
   $("#ap-export").addEventListener("click", exportJSON);

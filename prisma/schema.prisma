@@ -1,0 +1,287 @@
+// diginachlass.ch — Datenmodell
+//
+// SICHERHEITS-/SCOPE-REGEL (nicht verhandelbar):
+// Es werden NIEMALS Passwörter, Zugangsdaten, Wiederherstellungscodes oder
+// sonstige Geheimnisse der Drittkonten der Nutzer gespeichert. Das Produkt
+// dokumentiert ausschliesslich Metadaten und OB ein Zugang existiert
+// (ja|teilweise|nein) — niemals die Geheimnisse selbst.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  user
+  admin
+}
+
+enum NachlassCategory {
+  kommunikation
+  social_media
+  finanzen
+  cloud
+  krypto
+  unterhaltung
+  sonstiges
+}
+
+enum Relevance {
+  niedrig
+  mittel
+  hoch
+}
+
+enum AccessDocumented {
+  ja
+  teilweise
+  nein
+}
+
+enum Plan {
+  free
+  premium
+}
+
+enum EntitlementType {
+  subscription
+  lifetime
+}
+
+// Spiegelt im Wesentlichen die Stripe-Subscription-Status; "active" gilt auch
+// für eine erfolgreich abgeschlossene Einmalzahlung (lifetime).
+enum EntitlementStatus {
+  none
+  active
+  trialing
+  past_due
+  canceled
+  unpaid
+  incomplete
+  incomplete_expired
+  expired
+}
+
+enum PaymentMethodType {
+  card
+  twint
+  wallet
+  other
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+// ---------------------------------------------------------------------------
+// Nutzer & Authentifizierung
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String?
+  role            Role      @default(user)
+  emailVerifiedAt DateTime?
+
+  // Brute-Force-Schutz: temporäre Sperre nach mehreren Fehlversuchen
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  totpEnabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  totpSecret         TotpSecret?
+  nachlassAccounts   NachlassAccount[]
+  trustedPersons     TrustedPerson[]
+  entitlement        Entitlement?
+  payments           Payment[]
+  securityEvents     SecurityEvent[]
+
+  @@map("users")
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Es wird ausschliesslich der SHA-256-Hash des Tokens gespeichert.
+  tokenHash String    @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("email_verifications")
+}
+
+model PasswordReset {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+model TotpSecret {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // AES-256-GCM-verschlüsseltes TOTP-Shared-Secret (siehe lib/crypto.ts).
+  secretEnc   String
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("totp_secrets")
+}
+
+// connect-pg-simple Session-Store. Schema wird hier von Prisma verwaltet
+// (createTableIfMissing:false im Store), Spaltennamen müssen exakt passen.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}
+
+// ---------------------------------------------------------------------------
+// Nachlass-Metadaten (NUR Metadaten — keine Drittkonten-Geheimnisse!)
+// ---------------------------------------------------------------------------
+
+model NachlassAccount {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceName      String // z. B. "Google / Gmail"
+  provider         String? // optionaler Slug, z. B. "google"
+  category         NachlassCategory
+  relevance        Relevance        @default(mittel)
+  accessDocumented AccessDocumented @default(nein)
+  notes            String? // Metadaten/Hinweise — NIEMALS Zugangsdaten
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([userId])
+  @@map("nachlass_accounts")
+}
+
+model TrustedPerson {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  relationship String // Beziehung
+  email        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@map("trusted_persons")
+}
+
+// ---------------------------------------------------------------------------
+// Entitlements & Zahlungen
+// ---------------------------------------------------------------------------
+
+model Entitlement {
+  id     String          @id @default(cuid())
+  userId String          @unique
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan   Plan            @default(free)
+  type   EntitlementType?
+  status EntitlementStatus @default(none)
+
+  // Stripe-Referenzen
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  stripePaymentIntentId String?
+
+  // Gültig-bis (Abo: aktuelles Periodenende; lifetime: null = unbegrenzt)
+  validUntil       DateTime?
+  cancelAtPeriodEnd Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@map("entitlements")
+}
+
+model Payment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount   Int // in Rappen
+  currency String            @default("CHF")
+  method   PaymentMethodType @default(other)
+  status   PaymentStatus     @default(pending)
+
+  // MwSt-Felder vorbereitet, aber inaktiv (Betreiber nicht MwSt-pflichtig)
+  vatAmount Int   @default(0)
+  vatRate   Float @default(0)
+
+  // Stripe-Referenzen
+  stripePaymentIntentId   String?
+  stripeChargeId          String?
+  stripeCheckoutSessionId String?
+  stripeInvoiceId         String?
+
+  // Fortlaufende Belegnummer (siehe lib/receipts.ts)
+  receiptNumber String?  @unique
+  description   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("payments")
+}
+
+// Schlankes Sicherheits-/Audit-Log — speichert KEINE sensiblen Inhalte.
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type      String
+  ip        String?
+  userAgent String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@map("security_events")
+}
+
+// Fortlaufende Zähler (z. B. Belegnummern). Atomar via increment.
+model Counter {
+  name  String @id
+  value Int    @default(0)
+
+  @@map("counters")
+}

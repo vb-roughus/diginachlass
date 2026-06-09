@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Mail bestätigen – diginachlass.ch</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<header class="nav"><div class="nav-inner">
+  <a class="brand" href="/">diginachlass<span class="tld">.ch</span></a>
+  <nav class="nav-links"><a href="/">← Startseite</a><a href="/app/login.html">Anmelden</a></nav>
+</div></header>
+
+<main><div class="auth-shell">
+  <span class="eyebrow">E-Mail-Verifizierung</span>
+  <h1>Adresse bestätigen</h1>
+  <div class="card">
+    <div class="alert show alert-info" id="alert">Ihre Bestätigung wird geprüft …</div>
+    <a class="btn btn-primary btn-block" id="login-btn" href="/app/login.html" style="display:none">Zur Anmeldung</a>
+  </div>
+</div></main>
+
+<footer class="foot">© 2026 diginachlass.ch · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a></footer>
+
+<script src="/assets/app.js"></script>
+<script>
+const { api, $, showAlert } = window.DNL;
+const alert = $('#alert'), loginBtn = $('#login-btn');
+const token = new URLSearchParams(location.search).get('token');
+(async () => {
+  if (!token) { showAlert(alert, 'error', 'Kein Bestätigungstoken gefunden.'); return; }
+  try {
+    const res = await api('/auth/verify-email', { method: 'POST', body: { token } });
+    showAlert(alert, 'ok', res.message);
+    loginBtn.style.display = 'inline-flex';
+  } catch (err) {
+    showAlert(alert, 'error', err.message);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium freischalten – diginachlass.ch</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<header class="nav"><div class="nav-inner">
+  <a class="brand" href="/">diginachlass<span class="tld">.ch</span></a>
+  <nav class="nav-links"><a href="/app/account.html">Konto</a><a href="/" id="logout">Abmelden</a></nav>
+</div></header>
+
+<main>
+  <span class="eyebrow">Premium</span>
+  <h1>Vollständiges Compendium freischalten</h1>
+  <p class="lede">Risikoanalyse, Vollständigkeitsprüfung, Export und Verwaltung der Vertrauenspersonen.</p>
+
+  <div class="alert" id="alert"></div>
+
+  <div class="card" id="status-card" style="display:none">
+    <h2>Ihr Status</h2>
+    <p id="status-text" class="muted"></p>
+    <div class="row" style="margin-top:12px">
+      <a class="btn btn-ghost" href="/app/account.html">Konto verwalten</a>
+    </div>
+  </div>
+
+  <div id="choose">
+    <div class="card">
+      <h2>Wählen Sie Ihren Plan</h2>
+      <p class="muted">Bezahlung sicher über Stripe. Währung CHF, keine Mehrwertsteuer.</p>
+      <div class="plans">
+        <div class="plan" data-interval="monthly">
+          <span class="tag">Abo · monatlich</span>
+          <span class="price">CHF 4.90<span class="per"> / Monat</span></span>
+          <p class="muted">Flexibel, monatlich kündbar. Karten &amp; Apple/Google Pay.</p>
+        </div>
+        <div class="plan selected" data-interval="yearly">
+          <span class="tag">Abo · jährlich · beliebt</span>
+          <span class="price">CHF 49.–<span class="per"> / Jahr</span></span>
+          <p class="muted">Günstiger im Jahr. Karten &amp; Apple/Google Pay.</p>
+        </div>
+        <div class="plan" data-interval="lifetime">
+          <span class="tag">Einmalzahlung · lebenslang</span>
+          <span class="price">CHF 99.–<span class="per"> einmalig</span></span>
+          <p class="muted">Einmal zahlen, für immer. Twint, Karten &amp; Apple/Google Pay.</p>
+        </div>
+      </div>
+      <button class="btn btn-clay btn-block" id="checkout-btn">Weiter zur sicheren Bezahlung</button>
+      <p class="hint" style="margin-top:12px">Hinweis: Twint steht nur bei der Einmalzahlung zur Verfügung
+        (Stripe unterstützt mit Twint keine wiederkehrenden Zahlungen).</p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">© 2026 diginachlass.ch · Zahlungsabwicklung über Stripe · <a href="/datenschutz.html">Datenschutz</a></footer>
+
+<script src="/assets/app.js"></script>
+<script>
+const { api, $, showAlert, currentAccount } = window.DNL;
+const alert = $('#alert');
+let selected = 'yearly';
+
+document.querySelectorAll('.plan').forEach((p) => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.plan').forEach((x) => x.classList.remove('selected'));
+    p.classList.add('selected');
+    selected = p.dataset.interval;
+  });
+});
+
+$('#logout').addEventListener('click', async (e) => {
+  e.preventDefault();
+  try { await api('/auth/logout', { method: 'POST' }); } catch (_) {}
+  location.href = '/';
+});
+
+async function refreshStatus() {
+  const acc = await currentAccount();
+  if (!acc) { location.href = '/app/login.html?next=/app/upgrade.html'; return null; }
+  if (!acc.user.emailVerified) {
+    $('#choose').style.display = 'none';
+    showAlert(alert, 'info', 'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse, bevor Sie Premium kaufen.');
+    return acc;
+  }
+  if (acc.entitlement.premium) {
+    $('#choose').style.display = 'none';
+    $('#status-card').style.display = 'block';
+    const t = acc.entitlement.type === 'lifetime' ? 'lebenslang (Einmalzahlung)' : 'Abonnement';
+    $('#status-text').textContent = 'Premium ist aktiv – ' + t + '. Vielen Dank!';
+  }
+  return acc;
+}
+
+$('#checkout-btn').addEventListener('click', async () => {
+  const btn = $('#checkout-btn'); btn.disabled = true;
+  try {
+    const res = await api('/billing/checkout', { method: 'POST', body: { interval: selected } });
+    location.href = res.url;
+  } catch (err) {
+    showAlert(alert, 'error', err.message);
+    btn.disabled = false;
+  }
+});
+
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const status = params.get('status');
+  if (status === 'cancel') showAlert(alert, 'info', 'Der Bezahlvorgang wurde abgebrochen. Sie können es jederzeit erneut versuchen.');
+  if (status === 'success') {
+    showAlert(alert, 'info', 'Vielen Dank! Ihre Zahlung wird verarbeitet. Premium wird freigeschaltet, sobald die Bestätigung eintrifft …');
+    // Webhook-getrieben: kurz pollen, bis Premium aktiv ist.
+    for (let i = 0; i < 8; i++) {
+      const acc = await currentAccount();
+      if (acc && acc.entitlement.premium) { showAlert(alert, 'ok', 'Premium ist jetzt aktiv. Viel Erfolg!'); break; }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  await refreshStatus();
+})();
+</script>
+</body>
+</html>
