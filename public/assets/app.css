@@ -184,3 +184,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--forest);
   .sidebar.open{transform:none}
   .panel-area{max-width:none;padding:18px 16px 40px}
 }
+
+/* Dienst-Katalog: gängige Dienste als anklickbare Chips */
+.svc-catalog{display:flex;flex-direction:column;gap:16px}
+.svc-group-label{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:8px}
+.svc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.svc-chip{
+  font-family:var(--font-body);font-size:.86rem;font-weight:600;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+  cursor:pointer;transition:border-color .15s,background .15s,color .15s;
+}
+.svc-chip:hover{border-color:var(--forest);background:var(--sage)}
+.svc-chip:active{transform:translateY(1px)}
+.svc-chip.added{opacity:.55}
+.svc-chip.added::after{content:"✓";margin-left:6px;color:var(--ok);font-weight:700}
