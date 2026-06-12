@@ -5,6 +5,7 @@ import { generateToken, hashToken } from '../lib/tokens';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../lib/emails';
 import { recordSecurityEvent } from '../lib/logger';
 import { ensureEntitlement } from './entitlement';
+import { env } from '../config/env';
 
 /**
  * Authentifizierungs-Logik. Bewusst nicht-enumerierend: Registrierung und
@@ -50,7 +51,8 @@ export async function registerUser(
   if (existing) {
     // Konto existiert bereits — keine Preisgabe. Unverifizierte erhalten erneut
     // einen Verifizierungslink; verifizierte erhalten keinen neuen Account.
-    if (!existing.emailVerifiedAt) {
+    // Bei aktivem Test-Flag entfällt der Mailversand.
+    if (!existing.emailVerifiedAt && !env.autoVerifyEmail) {
       await createAndSendVerification(existing.id, existing.email);
     }
     await recordSecurityEvent({ type: 'register_existing_email', userId: existing.id, req });
@@ -63,10 +65,15 @@ export async function registerUser(
       email: input.email,
       passwordHash,
       name: input.name ?? null,
+      // Test-Flag: Konto sofort als verifiziert markieren (nur dev, nie prod).
+      ...(env.autoVerifyEmail ? { emailVerifiedAt: new Date() } : {}),
     },
   });
   await ensureEntitlement(user.id);
-  await createAndSendVerification(user.id, user.email);
+  // Verifizierungsmail nur senden, wenn die Verifizierung nicht übersprungen wird.
+  if (!env.autoVerifyEmail) {
+    await createAndSendVerification(user.id, user.email);
+  }
   await recordSecurityEvent({ type: 'register', userId: user.id, req });
 }
 
