@@ -54,6 +54,15 @@ const rawSchema = z.object({
 
   // Cookie-Verhalten. In Produktion sind secure-Cookies Pflicht (TLS).
   TRUST_PROXY: z.coerce.boolean().default(false),
+
+  // NUR für lokale Tests: überspringt die E-Mail-Verifizierung (neue Konten
+  // gelten sofort als bestätigt). In Produktion ZWINGEND wirkungslos (s. u.).
+  // Bewusst strikt geparst — nur "true"/"1" aktivieren, damit z. B. "false"
+  // nicht versehentlich als truthy gilt.
+  AUTH_AUTO_VERIFY_EMAIL: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 // Leere Strings aus der ENV als "nicht gesetzt" (undefined) behandeln, damit
@@ -83,7 +92,17 @@ export const env = {
   isTest: e.NODE_ENV === 'test',
   smtpConfigured: Boolean(e.SMTP_HOST && e.SMTP_PORT && e.SMTP_FROM),
   stripeConfigured: Boolean(e.STRIPE_SECRET_KEY && e.STRIPE_WEBHOOK_SECRET),
+  // In Produktion immer aus — egal, was die ENV sagt.
+  autoVerifyEmail: !isProd && e.AUTH_AUTO_VERIFY_EMAIL,
 };
+
+if (env.autoVerifyEmail) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[config] AUTH_AUTO_VERIFY_EMAIL ist aktiv — die E-Mail-Verifizierung wird ' +
+      'übersprungen. Nur für lokale Tests verwenden!',
+  );
+}
 
 export type AppEnv = typeof env;
 
