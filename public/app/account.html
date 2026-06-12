@@ -10,116 +10,179 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/app.css">
 </head>
-<body>
-<header class="nav"><div class="nav-inner">
-  <a class="brand" href="/">diginachlass<span class="tld">.ch</span></a>
-  <nav class="nav-links">
-    <a href="/">Startseite</a>
-    <span id="plan-badge" class="badge free">…</span>
-    <a href="#" id="logout">Abmelden</a>
-  </nav>
-</div></header>
+<body class="app-body">
+<div class="app-shell">
 
-<main>
-  <span class="eyebrow">Mein Konto</span>
-  <h1 id="hello">Willkommen</h1>
-  <p class="lede" id="verify-note" style="display:none"></p>
-  <div class="alert" id="alert"></div>
+  <!-- Seitenleiste -->
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="/">diginachlass<span class="tld">.ch</span></a>
 
-  <!-- Compendium -->
-  <div class="card">
-    <h2>Compendium</h2>
-    <div id="compendium"><p class="muted">Wird geladen …</p></div>
-  </div>
-
-  <!-- Dienste -->
-  <div class="card">
-    <h2>Meine Dienste</h2>
-    <p class="muted">Erfassen Sie Ihre digitalen Konten – nur Metadaten, niemals Passwörter oder Zugangsdaten.</p>
-    <div id="accounts-list" style="margin-top:14px"></div>
-    <div class="sep"></div>
-    <form id="account-form">
-      <div class="row">
-        <div class="field" style="flex:2"><label>Dienst</label><input type="text" id="svc-name" placeholder="z. B. Google / Gmail" required></div>
-        <div class="field"><label>Kategorie</label>
-          <select id="svc-cat">
-            <option value="kommunikation">Kommunikation</option>
-            <option value="social_media">Social Media</option>
-            <option value="finanzen">Finanzen</option>
-            <option value="cloud">Cloud</option>
-            <option value="krypto">Krypto</option>
-            <option value="unterhaltung">Unterhaltung</option>
-            <option value="sonstiges">Sonstiges</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Relevanz</label>
-          <select id="svc-rel"><option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select>
-        </div>
-        <div class="field"><label>Zugang dokumentiert?</label>
-          <select id="svc-doc"><option value="nein" selected>nein</option><option value="teilweise">teilweise</option><option value="ja">ja</option></select>
-        </div>
-      </div>
-      <div class="field"><label>Notizen <span class="muted">(keine Passwörter!)</span></label><textarea id="svc-notes" placeholder="Hinweise für Angehörige – ohne Zugangsdaten"></textarea></div>
-      <button class="btn btn-primary btn-sm" type="submit">Dienst hinzufügen</button>
-    </form>
-  </div>
-
-  <!-- Vertrauenspersonen (Premium) -->
-  <div class="card">
-    <h2>Vertrauenspersonen <span class="badge premium" style="font-size:.66rem">Premium</span></h2>
-    <div id="trusted-section"><p class="muted">Wird geladen …</p></div>
-  </div>
-
-  <!-- Abrechnung -->
-  <div class="card">
-    <h2>Abrechnung &amp; Premium</h2>
-    <p id="billing-text" class="muted">Wird geladen …</p>
-    <div class="row" style="margin-top:12px">
-      <a class="btn btn-clay" id="upgrade-link" href="/app/upgrade.html" style="display:none">Premium freischalten</a>
-      <button class="btn btn-ghost" id="portal-btn" style="display:none">Abo verwalten (Stripe)</button>
-      <button class="btn btn-ghost" id="cancel-btn" style="display:none">Abo kündigen</button>
+    <div class="sidebar-user">
+      <span class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      </span>
+      <span id="plan-badge" class="badge free">…</span>
     </div>
-  </div>
 
-  <!-- Sicherheit -->
-  <div class="card">
-    <h2>Profil &amp; Sicherheit</h2>
-    <form id="profile-form" style="margin-top:12px">
-      <div class="field"><label>Name</label><input type="text" id="pf-name"></div>
-      <div class="field"><label>E-Mail-Adresse</label><input type="email" id="pf-email"></div>
-      <div class="field"><label>Neues Passwort <span class="muted">(optional)</span></label><input type="password" id="pf-newpw" autocomplete="new-password"></div>
-      <div class="field"><label>Aktuelles Passwort <span class="muted">(bei E-Mail-/Passwortänderung)</span></label><input type="password" id="pf-curpw" autocomplete="current-password"></div>
-      <button class="btn btn-primary btn-sm" type="submit">Änderungen speichern</button>
-    </form>
+    <nav class="side-nav" aria-label="Konto-Navigation">
+      <a class="side-link active" data-panel="overview" data-title="Übersicht" href="#overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Übersicht</span>
+      </a>
+      <a class="side-link" data-panel="services" data-title="Meine Dienste" href="#services">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>
+        <span>Meine Dienste</span>
+      </a>
+      <a class="side-link" data-panel="trusted" data-title="Vertrauenspersonen" href="#trusted">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 4.5a3.2 3.2 0 0 1 0 7M18 20c0-3-1.2-4.6-3-5"/></svg>
+        <span>Vertrauenspersonen</span>
+      </a>
+      <a class="side-link" data-panel="billing" data-title="Abrechnung &amp; Premium" href="#billing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+        <span>Abrechnung</span>
+      </a>
+      <a class="side-link" data-panel="security" data-title="Profil &amp; Sicherheit" href="#security">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.2-3.6"/></svg>
+        <span>Profil &amp; Sicherheit</span>
+      </a>
+      <a class="side-link" data-panel="data" data-title="Daten &amp; Datenschutz" href="#data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>
+        <span>Daten &amp; Datenschutz</span>
+      </a>
+    </nav>
 
-    <div class="sep"></div>
-    <h2 style="font-size:1.05rem">Zwei-Faktor-Authentifizierung (2FA)</h2>
-    <div id="twofa-section"><p class="muted">Wird geladen …</p></div>
-  </div>
-
-  <!-- Daten & Datenschutz -->
-  <div class="card">
-    <h2>Daten &amp; Datenschutz</h2>
-    <p class="muted">Recht auf Auskunft und Löschung (revDSG / DSGVO).</p>
-    <div class="row" style="margin-top:12px">
-      <a class="btn btn-ghost" href="/api/account/export">Meine Daten exportieren (JSON)</a>
-    </div>
-    <div class="sep"></div>
-    <h2 style="font-size:1.05rem;color:var(--risk)">Konto löschen</h2>
-    <p class="muted">Permanent. Löscht alle Daten und kündigt ein laufendes Abo.</p>
-    <form id="delete-form" style="margin-top:12px">
-      <div class="row">
-        <div class="field"><label>Passwort</label><input type="password" id="del-pw" autocomplete="current-password"></div>
-        <div class="field"><label>Tippen Sie LÖSCHEN</label><input type="text" id="del-confirm" placeholder="LÖSCHEN"></div>
+    <div class="sidebar-foot">
+      <a href="#" id="logout" class="side-link side-link-muted">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
+        <span>Abmelden</span>
+      </a>
+      <div class="sidebar-legal">
+        <a href="/">Startseite</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>
       </div>
-      <button class="btn btn-ghost" type="submit" style="border-color:var(--risk);color:var(--risk)">Konto endgültig löschen</button>
-    </form>
-  </div>
-</main>
+    </div>
+  </aside>
 
-<footer class="foot">© 2026 diginachlass.ch · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a></footer>
+  <!-- Panel-Bereich -->
+  <main class="panel-area">
+    <header class="panel-topbar">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menü öffnen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1 class="panel-title" id="panel-title">Übersicht</h1>
+    </header>
+
+    <p class="lede verify-banner" id="verify-note" style="display:none"></p>
+    <div class="alert" id="alert"></div>
+
+    <!-- Übersicht / Compendium -->
+    <section class="panel active" data-panel="overview" id="overview">
+      <h2 class="panel-hello" id="hello">Willkommen</h2>
+      <div class="card">
+        <h2>Compendium</h2>
+        <div id="compendium"><p class="muted">Wird geladen …</p></div>
+      </div>
+    </section>
+
+    <!-- Dienste -->
+    <section class="panel" data-panel="services" id="services">
+      <div class="card">
+        <h2>Meine Dienste</h2>
+        <p class="muted">Erfassen Sie Ihre digitalen Konten – nur Metadaten, niemals Passwörter oder Zugangsdaten.</p>
+        <div id="accounts-list" style="margin-top:14px"></div>
+        <div class="sep"></div>
+        <form id="account-form">
+          <div class="row">
+            <div class="field" style="flex:2"><label>Dienst</label><input type="text" id="svc-name" placeholder="z. B. Google / Gmail" required></div>
+            <div class="field"><label>Kategorie</label>
+              <select id="svc-cat">
+                <option value="kommunikation">Kommunikation</option>
+                <option value="social_media">Social Media</option>
+                <option value="finanzen">Finanzen</option>
+                <option value="cloud">Cloud</option>
+                <option value="krypto">Krypto</option>
+                <option value="unterhaltung">Unterhaltung</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Relevanz</label>
+              <select id="svc-rel"><option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select>
+            </div>
+            <div class="field"><label>Zugang dokumentiert?</label>
+              <select id="svc-doc"><option value="nein" selected>nein</option><option value="teilweise">teilweise</option><option value="ja">ja</option></select>
+            </div>
+          </div>
+          <div class="field"><label>Notizen <span class="muted">(keine Passwörter!)</span></label><textarea id="svc-notes" placeholder="Hinweise für Angehörige – ohne Zugangsdaten"></textarea></div>
+          <button class="btn btn-primary btn-sm" type="submit">Dienst hinzufügen</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Vertrauenspersonen (Premium) -->
+    <section class="panel" data-panel="trusted" id="trusted">
+      <div class="card">
+        <h2>Vertrauenspersonen <span class="badge premium" style="font-size:.66rem">Premium</span></h2>
+        <div id="trusted-section"><p class="muted">Wird geladen …</p></div>
+      </div>
+    </section>
+
+    <!-- Abrechnung -->
+    <section class="panel" data-panel="billing" id="billing">
+      <div class="card">
+        <h2>Abrechnung &amp; Premium</h2>
+        <p id="billing-text" class="muted">Wird geladen …</p>
+        <div class="row" style="margin-top:12px">
+          <a class="btn btn-clay" id="upgrade-link" href="/app/upgrade.html" style="display:none">Premium freischalten</a>
+          <button class="btn btn-ghost" id="portal-btn" style="display:none">Abo verwalten (Stripe)</button>
+          <button class="btn btn-ghost" id="cancel-btn" style="display:none">Abo kündigen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profil & Sicherheit -->
+    <section class="panel" data-panel="security" id="security">
+      <div class="card">
+        <h2>Profil &amp; Sicherheit</h2>
+        <form id="profile-form" style="margin-top:12px">
+          <div class="field"><label>Name</label><input type="text" id="pf-name"></div>
+          <div class="field"><label>E-Mail-Adresse</label><input type="email" id="pf-email"></div>
+          <div class="field"><label>Neues Passwort <span class="muted">(optional)</span></label><input type="password" id="pf-newpw" autocomplete="new-password"></div>
+          <div class="field"><label>Aktuelles Passwort <span class="muted">(bei E-Mail-/Passwortänderung)</span></label><input type="password" id="pf-curpw" autocomplete="current-password"></div>
+          <button class="btn btn-primary btn-sm" type="submit">Änderungen speichern</button>
+        </form>
+
+        <div class="sep"></div>
+        <h2 style="font-size:1.05rem">Zwei-Faktor-Authentifizierung (2FA)</h2>
+        <div id="twofa-section"><p class="muted">Wird geladen …</p></div>
+      </div>
+    </section>
+
+    <!-- Daten & Datenschutz -->
+    <section class="panel" data-panel="data" id="data">
+      <div class="card">
+        <h2>Daten &amp; Datenschutz</h2>
+        <p class="muted">Recht auf Auskunft und Löschung (revDSG / DSGVO).</p>
+        <div class="row" style="margin-top:12px">
+          <a class="btn btn-ghost" href="/api/account/export">Meine Daten exportieren (JSON)</a>
+        </div>
+        <div class="sep"></div>
+        <h2 style="font-size:1.05rem;color:var(--risk)">Konto löschen</h2>
+        <p class="muted">Permanent. Löscht alle Daten und kündigt ein laufendes Abo.</p>
+        <form id="delete-form" style="margin-top:12px">
+          <div class="row">
+            <div class="field"><label>Passwort</label><input type="password" id="del-pw" autocomplete="current-password"></div>
+            <div class="field"><label>Tippen Sie LÖSCHEN</label><input type="text" id="del-confirm" placeholder="LÖSCHEN"></div>
+          </div>
+          <button class="btn btn-ghost" type="submit" style="border-color:var(--risk);color:var(--risk)">Konto endgültig löschen</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Overlay für die mobile Seitenleiste -->
+  <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
+</div>
 
 <script src="/assets/app.js"></script>
 <script src="/assets/account.js"></script>
