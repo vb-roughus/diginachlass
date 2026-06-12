@@ -17,6 +17,7 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "admin:create": "tsx src/scripts/createAdmin.ts",
+    "stripe:seed": "tsx src/scripts/createStripePrices.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
