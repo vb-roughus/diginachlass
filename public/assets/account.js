@@ -11,6 +11,50 @@
     cloud: 'Cloud', krypto: 'Krypto', unterhaltung: 'Unterhaltung', sonstiges: 'Sonstiges',
   };
 
+  // Kuratierte Liste gängiger Dienste je Kategorie. Ein Klick übernimmt Name und
+  // Kategorie ins Formular; nicht gelistete Dienste werden manuell erfasst.
+  const SERVICE_CATALOG = [
+    { category: 'kommunikation', services: ['Gmail', 'Outlook / Hotmail', 'GMX', 'Bluewin', 'Proton Mail', 'WhatsApp', 'Threema', 'Telegram', 'Signal'] },
+    { category: 'social_media', services: ['Facebook', 'Instagram', 'X (Twitter)', 'LinkedIn', 'TikTok', 'Snapchat', 'Pinterest', 'Reddit'] },
+    { category: 'finanzen', services: ['PayPal', 'TWINT', 'PostFinance', 'Revolut', 'Wise', 'Neon'] },
+    { category: 'cloud', services: ['Google Drive', 'iCloud', 'Dropbox', 'OneDrive', 'pCloud', 'Proton Drive'] },
+    { category: 'krypto', services: ['Bitcoin-Wallet', 'Coinbase', 'Binance', 'Kraken', 'Ledger', 'MetaMask'] },
+    { category: 'unterhaltung', services: ['Netflix', 'Spotify', 'Disney+', 'Amazon Prime', 'YouTube', 'Steam', 'Apple Music', 'PlayStation Network', 'Twitch'] },
+    { category: 'sonstiges', services: ['Amazon', 'Apple ID', 'Microsoft-Konto', 'Google-Konto', 'eBay', 'Ricardo', 'Galaxus'] },
+  ];
+  let addedNames = new Set();
+
+  // ---- Dienst-Katalog ------------------------------------------------------
+  function renderCatalog() {
+    const el = $('#service-catalog');
+    if (!el) return;
+    el.innerHTML = SERVICE_CATALOG.map((g) =>
+      '<div class="svc-group"><div class="svc-group-label">' + escapeHtml(CAT_LABELS[g.category] || g.category) + '</div>' +
+      '<div class="svc-chips">' + g.services.map((name) =>
+        '<button type="button" class="svc-chip" data-name="' + escapeHtml(name) + '" data-cat="' + g.category + '">' + escapeHtml(name) + '</button>'
+      ).join('') + '</div></div>'
+    ).join('');
+    el.querySelectorAll('.svc-chip').forEach((c) =>
+      c.addEventListener('click', () => pickService(c.dataset.name, c.dataset.cat)));
+    updateCatalogState();
+  }
+
+  function updateCatalogState() {
+    document.querySelectorAll('#service-catalog .svc-chip').forEach((c) => {
+      const added = addedNames.has((c.dataset.name || '').trim().toLowerCase());
+      c.classList.toggle('added', added);
+      c.title = added ? 'Bereits erfasst' : 'Name und Kategorie übernehmen';
+    });
+  }
+
+  function pickService(name, category) {
+    $('#svc-name').value = name;
+    $('#svc-cat').value = category;
+    const form = $('#account-form');
+    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('#svc-rel').focus();
+  }
+
   // ---- Init ----------------------------------------------------------------
   async function init() {
     account = await window.DNL.currentAccount();
@@ -33,6 +77,7 @@
 
     renderBilling();
     render2fa();
+    renderCatalog();
     await Promise.all([loadCompendium(), loadAccounts(), loadTrusted()]);
   }
 
@@ -68,6 +113,8 @@
     const el = $('#accounts-list');
     try {
       const { items } = await api('/accounts');
+      addedNames = new Set(items.map((a) => (a.serviceName || '').trim().toLowerCase()));
+      updateCatalogState();
       if (!items.length) { el.innerHTML = '<p class="muted">Noch keine Dienste erfasst.</p>'; return; }
       el.innerHTML = items.map((a) =>
         '<div class="item"><div class="top"><span class="name">' + escapeHtml(a.serviceName) + '</span>' +
