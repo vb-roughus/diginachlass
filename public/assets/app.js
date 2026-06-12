@@ -81,4 +81,50 @@
   }
 
   window.DNL = { api, fetchCsrf, $, showAlert, hideAlert, fieldErrors, escapeHtml, currentAccount };
+
+  // --- Konto-Dashboard: Panel-Navigation (nur bei vorhandener .app-shell) ---
+  function initShell() {
+    const shell = document.querySelector('.app-shell');
+    if (!shell) return;
+    const navLinks = Array.prototype.slice.call(shell.querySelectorAll('.side-link[data-panel]'));
+    const panels = Array.prototype.slice.call(shell.querySelectorAll('.panel[data-panel]'));
+    if (!navLinks.length || !panels.length) return;
+
+    const titleEl = document.getElementById('panel-title');
+    const sidebar = document.getElementById('sidebar');
+    const scrim = document.getElementById('sidebar-scrim');
+
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.remove('open');
+      if (scrim) scrim.hidden = true;
+    }
+    function openSidebar() {
+      if (sidebar) sidebar.classList.add('open');
+      if (scrim) scrim.hidden = false;
+    }
+
+    function activate(name) {
+      const link = navLinks.find((l) => l.dataset.panel === name) || navLinks[0];
+      const target = link.dataset.panel;
+      navLinks.forEach((l) => l.classList.toggle('active', l === link));
+      panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === target));
+      if (titleEl) titleEl.textContent = link.dataset.title || link.textContent.trim();
+      try { history.replaceState(null, '', '#' + target); } catch (_) { location.hash = target; }
+      closeSidebar();
+    }
+
+    navLinks.forEach((l) =>
+      l.addEventListener('click', (e) => { e.preventDefault(); activate(l.dataset.panel); }));
+
+    const toggle = document.getElementById('menu-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', () =>
+        sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+    }
+    if (scrim) scrim.addEventListener('click', closeSidebar);
+
+    const initial = (location.hash || '').replace('#', '');
+    activate(navLinks.some((l) => l.dataset.panel === initial) ? initial : navLinks[0].dataset.panel);
+  }
+  initShell();
 })();

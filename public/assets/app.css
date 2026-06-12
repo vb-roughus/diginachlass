@@ -125,3 +125,62 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--forest);
 @media (max-width:560px){
   .nav-links{gap:12px;font-size:.84rem}
 }
+
+/* =========================================================
+   Konto-Dashboard: Seitenleiste + Panel-Bereich
+   (nur auf Seiten mit .app-shell; übrige Seiten unberührt)
+   ========================================================= */
+.app-shell{position:relative;z-index:5;display:flex;align-items:flex-start;width:100%;min-height:100vh}
+
+/* Seitenleiste */
+.sidebar{
+  position:sticky;top:0;height:100vh;flex:0 0 264px;width:264px;
+  display:flex;flex-direction:column;gap:20px;padding:22px 16px;
+  background:var(--paper-2);border-right:1px solid var(--line);overflow-y:auto;
+}
+.sidebar .brand{font-size:1.25rem;padding:0 6px}
+.sidebar-user{display:flex;align-items:center;gap:12px;padding:0 6px 18px;border-bottom:1px solid var(--line)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--sage);color:var(--forest);flex:0 0 auto}
+.avatar svg{width:22px;height:22px}
+
+.side-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.side-link{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-sm);
+  color:var(--ink-soft);font-weight:600;font-size:.93rem;cursor:pointer;
+  transition:background .15s,color .15s;text-align:left;
+}
+.side-link svg{width:19px;height:19px;flex:0 0 auto;opacity:.9}
+.side-link:hover{background:var(--sage);color:var(--ink)}
+.side-link.active{background:var(--forest);color:var(--paper)}
+.side-link.active svg{opacity:1}
+.sidebar-foot{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--line)}
+.sidebar-legal{font-size:.76rem;color:var(--ink-soft);padding:0 12px;line-height:1.6}
+.sidebar-legal a{color:var(--forest);font-weight:600}
+
+/* Panel-Bereich */
+.panel-area{flex:1;min-width:0;width:100%;max-width:980px;margin:0;padding:clamp(20px,3.5vw,44px)}
+.panel-topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.panel-title{font-family:var(--font-display);font-weight:600;font-size:clamp(1.5rem,3vw,2rem);line-height:1.1;color:var(--forest-ink);margin:0}
+.menu-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;flex:0 0 auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper-2);color:var(--ink);cursor:pointer}
+.menu-toggle svg{width:20px;height:20px}
+
+.app-shell .panel{display:none}
+.app-shell .panel.active{display:block;animation:panel-in .22s var(--ease)}
+@keyframes panel-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-hello{font-family:var(--font-display);font-weight:500;font-size:1.15rem;color:var(--ink-soft);margin-bottom:14px}
+.verify-banner{background:rgba(201,162,60,.14);border:1px solid rgba(201,162,60,.4);color:#7A5E16;border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px}
+
+/* Mobile: Seitenleiste als Off-Canvas-Panel */
+.sidebar-scrim{position:fixed;inset:0;background:rgba(15,42,37,.4);z-index:40;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+@media (min-width:901px){
+  .sidebar-scrim{display:none !important}
+}
+@media (max-width:900px){
+  .menu-toggle{display:inline-flex}
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;height:100vh;height:100dvh;width:280px;max-width:84vw;
+    transform:translateX(-100%);transition:transform .26s var(--ease);z-index:50;box-shadow:var(--shadow);
+  }
+  .sidebar.open{transform:none}
+  .panel-area{max-width:none;padding:18px 16px 40px}
+}
