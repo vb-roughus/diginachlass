@@ -37,7 +37,42 @@ export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).send('Nicht gefunden.');
 }
 
-export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
+/**
+ * Beschreibt einen unbekannten Fehler aussagekräftig fürs Log. Wichtig:
+ * `AggregateError` (z. B. fehlgeschlagene DB-/SMTP-Verbindung über mehrere
+ * Adressen — auf Windows lösen sich Hosts oft zu IPv6 *und* IPv4 auf) hat
+ * häufig eine leere `message`; die eigentlichen Ursachen stecken in `.errors`.
+ */
+function describeError(err: unknown): Record<string, unknown> {
+  if (err instanceof AggregateError) {
+    return {
+      name: 'AggregateError',
+      message: err.message || '(leer)',
+      errors: err.errors.map((e) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e))),
+      ...(env.isProd ? {} : { stack: err.stack }),
+    };
+  }
+  if (err instanceof Error) {
+    const code = (err as { code?: unknown }).code;
+    return {
+      name: err.name,
+      message: err.message || '(leer)',
+      ...(code ? { code } : {}),
+      ...(env.isProd ? {} : { stack: err.stack }),
+    };
+  }
+  return { message: String(err) };
+}
+
+export function errorHandler(err: unknown, _req: Request, res: Response, next: NextFunction): void {
+  // Wurde bereits (teilweise) eine Antwort gesendet, darf kein zweites Mal
+  // geschrieben werden — sonst ERR_HTTP_HEADERS_SENT. An Express' Standard-
+  // Handler delegieren, der die Verbindung sauber schliesst.
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+
   if (err instanceof ZodError) {
     res.status(400).json({
       error: 'Bitte überprüfen Sie Ihre Eingaben.',
@@ -58,11 +93,10 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
-  logger.error('unhandled_error', {
-    message: err instanceof Error ? err.message : String(err),
-  });
+  const described = describeError(err);
+  logger.error('unhandled_error', described);
   res.status(500).json({
     error: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.',
-    ...(env.isProd ? {} : { debug: err instanceof Error ? err.message : String(err) }),
+    ...(env.isProd ? {} : { debug: described }),
   });
 }
