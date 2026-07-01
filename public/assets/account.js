@@ -11,48 +11,81 @@
     cloud: 'Cloud', krypto: 'Krypto', unterhaltung: 'Unterhaltung', sonstiges: 'Sonstiges',
   };
 
-  // Kuratierte Liste gängiger Dienste je Kategorie. Ein Klick übernimmt Name und
-  // Kategorie ins Formular; nicht gelistete Dienste werden manuell erfasst.
+  // Kuratierte Liste gängiger Dienste je Kategorie (inkl. typischer Schweizer
+  // Anbieter). Dient als durchsuchbare Auswahl; nicht gelistete Dienste werden
+  // einfach als eigener Name eingegeben.
   const SERVICE_CATALOG = [
-    { category: 'kommunikation', services: ['Gmail', 'Outlook / Hotmail', 'GMX', 'Bluewin', 'Proton Mail', 'WhatsApp', 'Threema', 'Telegram', 'Signal'] },
+    { category: 'kommunikation', services: ['Gmail', 'Outlook / Hotmail', 'GMX', 'Bluewin', 'Proton Mail', 'Sunrise', 'Salt', 'WhatsApp', 'Threema', 'Telegram', 'Signal'] },
     { category: 'social_media', services: ['Facebook', 'Instagram', 'X (Twitter)', 'LinkedIn', 'TikTok', 'Snapchat', 'Pinterest', 'Reddit'] },
-    { category: 'finanzen', services: ['PayPal', 'TWINT', 'PostFinance', 'Revolut', 'Wise', 'Neon'] },
-    { category: 'cloud', services: ['Google Drive', 'iCloud', 'Dropbox', 'OneDrive', 'pCloud', 'Proton Drive'] },
+    { category: 'finanzen', services: ['PayPal', 'TWINT', 'PostFinance', 'UBS', 'Raiffeisen', 'Kantonalbank (ZKB)', 'Migros Bank', 'Yuh', 'Swissquote', 'Viseca (Kreditkarte)', 'Revolut', 'Wise', 'Neon'] },
+    { category: 'cloud', services: ['Google Drive', 'iCloud', 'Dropbox', 'OneDrive', 'pCloud', 'Proton Drive', 'Infomaniak kDrive'] },
     { category: 'krypto', services: ['Bitcoin-Wallet', 'Coinbase', 'Binance', 'Kraken', 'Ledger', 'MetaMask'] },
-    { category: 'unterhaltung', services: ['Netflix', 'Spotify', 'Disney+', 'Amazon Prime', 'YouTube', 'Steam', 'Apple Music', 'PlayStation Network', 'Twitch'] },
-    { category: 'sonstiges', services: ['Amazon', 'Apple ID', 'Microsoft-Konto', 'Google-Konto', 'eBay', 'Ricardo', 'Galaxus'] },
+    { category: 'unterhaltung', services: ['Netflix', 'Spotify', 'Disney+', 'Amazon Prime', 'YouTube', 'Blue TV', 'Zattoo', 'Steam', 'Apple Music', 'PlayStation Network', 'Twitch'] },
+    { category: 'sonstiges', services: ['Amazon', 'Apple ID', 'Microsoft-Konto', 'Google-Konto', 'SwissID', 'SBB (SwissPass)', 'Cumulus (Migros)', 'Supercard (Coop)', 'Ricardo', 'Galaxus', 'eBay'] },
   ];
   let addedNames = new Set();
 
-  // ---- Dienst-Katalog ------------------------------------------------------
-  function renderCatalog() {
-    const el = $('#service-catalog');
-    if (!el) return;
-    el.innerHTML = SERVICE_CATALOG.map((g) =>
-      '<div class="svc-group"><div class="svc-group-label">' + escapeHtml(CAT_LABELS[g.category] || g.category) + '</div>' +
-      '<div class="svc-chips">' + g.services.map((name) =>
-        '<button type="button" class="svc-chip" data-name="' + escapeHtml(name) + '" data-cat="' + g.category + '">' + escapeHtml(name) + '</button>'
-      ).join('') + '</div></div>'
-    ).join('');
-    el.querySelectorAll('.svc-chip').forEach((c) =>
-      c.addEventListener('click', () => pickService(c.dataset.name, c.dataset.cat)));
-    updateCatalogState();
-  }
+  // Flache, durchsuchbare Liste (Name + Kategorie-Label).
+  const COMBO_ITEMS = SERVICE_CATALOG.flatMap((g) =>
+    g.services.map((name) => ({ name: name, category: g.category, label: CAT_LABELS[g.category] })));
 
-  function updateCatalogState() {
-    document.querySelectorAll('#service-catalog .svc-chip').forEach((c) => {
-      const added = addedNames.has((c.dataset.name || '').trim().toLowerCase());
-      c.classList.toggle('added', added);
-      c.title = added ? 'Bereits erfasst' : 'Name und Kategorie übernehmen';
+  // ---- Durchsuchbare Dienst-Auswahl (Combobox) -----------------------------
+  function initCombo() {
+    const input = $('#svc-name');
+    const panel = $('#svc-combo-panel');
+    const combo = $('#svc-combo');
+    if (!input || !panel || !combo) return;
+
+    let current = [];
+    let activeIdx = -1;
+
+    function open() { panel.hidden = false; input.setAttribute('aria-expanded', 'true'); }
+    function close() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); activeIdx = -1; }
+
+    function render() {
+      const q = input.value.trim().toLowerCase();
+      current = COMBO_ITEMS.filter((it) =>
+        !q || it.name.toLowerCase().includes(q) || it.label.toLowerCase().includes(q));
+      if (!current.length) {
+        panel.innerHTML = '<div class="combo-empty">Kein Treffer – Ihre Eingabe wird als eigener Dienst übernommen.</div>';
+        open();
+        return;
+      }
+      panel.innerHTML = current.map((it, i) => {
+        const added = addedNames.has(it.name.toLowerCase());
+        return '<button type="button" class="combo-opt' + (i === activeIdx ? ' active' : '') + '" role="option" data-i="' + i + '">' +
+          '<span class="combo-name">' + escapeHtml(it.name) + (added ? ' <span class="combo-added">✓ erfasst</span>' : '') + '</span>' +
+          '<span class="combo-cat">' + escapeHtml(it.label) + '</span></button>';
+      }).join('');
+      panel.querySelectorAll('.combo-opt').forEach((btn) => {
+        // mousedown statt click, damit der Input-Fokus nicht vorher verloren geht.
+        btn.addEventListener('mousedown', (e) => { e.preventDefault(); choose(current[Number(btn.dataset.i)]); });
+      });
+      open();
+      if (activeIdx >= 0) {
+        const act = panel.querySelector('.combo-opt.active');
+        if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    function choose(it) {
+      if (!it) return;
+      input.value = it.name;
+      $('#svc-cat').value = it.category;
+      close();
+      $('#svc-rel').focus();
+    }
+
+    input.addEventListener('focus', render);
+    input.addEventListener('input', () => { activeIdx = -1; render(); });
+    input.addEventListener('keydown', (e) => {
+      if (panel.hidden) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, current.length - 1); render(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); render(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (activeIdx >= 0) choose(current[activeIdx]); else close(); }
+      else if (e.key === 'Escape') { close(); }
     });
-  }
-
-  function pickService(name, category) {
-    $('#svc-name').value = name;
-    $('#svc-cat').value = category;
-    const form = $('#account-form');
-    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    $('#svc-rel').focus();
+    document.addEventListener('click', (e) => { if (!combo.contains(e.target)) close(); });
   }
 
   // ---- Init ----------------------------------------------------------------
@@ -77,7 +110,7 @@
 
     renderBilling();
     render2fa();
-    renderCatalog();
+    initCombo();
     await Promise.all([loadCompendium(), loadAccounts(), loadTrusted()]);
   }
 
@@ -116,7 +149,6 @@
     try {
       const { items } = await api('/accounts');
       addedNames = new Set(items.map((a) => (a.serviceName || '').trim().toLowerCase()));
-      updateCatalogState();
       if (!items.length) { el.innerHTML = '<p class="muted">Noch keine Dienste erfasst.</p>'; return; }
       el.innerHTML = items.map((a) =>
         '<div class="item"><div class="top"><span class="name">' + escapeHtml(a.serviceName) + '</span>' +
