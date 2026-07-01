@@ -247,6 +247,56 @@ export const DEATH_HANDLING_GUIDE: GuideEntry[] = [
     verified: true,
     match: ['krypto', 'crypto', 'bitcoin', 'coinbase', 'ledger', 'binance', 'kraken', 'metamask', 'wallet'],
   },
+  {
+    service: 'Schweizer Bank- & Finanzkonten',
+    category: 'Finanzen',
+    contactPoint:
+      'Informieren Sie die Bank umgehend über den Todesfall — sie sichert das Konto. Die Erbinnen und Erben bilden eine Erbengemeinschaft und verfügen gemeinsam.',
+    steps: [
+      'Die Bank umgehend informieren (das Konto wird gesichert); eine Kopie der Sterbeurkunde bereithalten.',
+      'Eine Erbbescheinigung beibringen; ist noch keine vorhanden, genügt der Bank teils die Sterbeurkunde nebst Nachweis der Familienverhältnisse.',
+      'Verfügungen gemeinsam als Erbengemeinschaft oder über eine bevollmächtigte Person vornehmen. TWINT ist an ein Bankkonto gekoppelt und wird über die Bank abgewickelt.',
+    ],
+    links: [
+      { label: 'PostFinance: Todesfall melden', url: 'https://www.postfinance.ch/en/support/services/death/information-for-bereaved.html' },
+      { label: 'ch.ch: Erbschein / Erbbescheinigung', url: 'https://www.ch.ch/de/familie-und-partnerschaft/erbschaft/erbschein/' },
+    ],
+    note: 'Das konkrete Vorgehen ist bei UBS, Raiffeisen, Kantonalbanken, Migros Bank, Yuh, Swissquote u. a. sehr ähnlich; prüfen Sie zusätzlich die Seite Ihrer Bank.',
+    verified: true,
+    match: ['postfinance', 'ubs', 'raiffeisen', 'kantonalbank', 'zkb', 'migros bank', 'yuh', 'swissquote', 'viseca', 'twint', 'neon', 'bank'],
+  },
+  {
+    service: 'Telekom-Anbieter (Swisscom, Sunrise, Salt)',
+    category: 'Kommunikation',
+    contactPoint:
+      'Melden Sie den Todesfall dem Anbieter; das Abo lässt sich kündigen oder übernehmen. Für den Zugriff auf zugehörige E-Mail-Konten (z. B. Bluewin) ist eine Erbbescheinigung nötig.',
+    steps: [
+      'Den Todesfall telefonisch oder schriftlich melden (Swisscom: 0800 055 055) und laufende Abos kündigen oder übernehmen.',
+      'Für den Zugriff auf die Anbieter-E-Mail (z. B. Bluewin) eine Kopie der Erbbescheinigung bereithalten.',
+      'Weitere gekoppelte Dienste (TV, Cloud, Rufnummern) prüfen und deren Weiterführung oder Kündigung regeln.',
+    ],
+    links: [
+      { label: 'Swisscom: Todesfall melden (Abo kündigen/übernehmen)', url: 'https://www.swisscom.ch/en/residential/help/bill-and-contract/death.html' },
+    ],
+    verified: true,
+    match: ['swisscom', 'bluewin', 'sunrise', 'salt'],
+  },
+  {
+    service: 'Proton (Mail, Drive, Pass)',
+    category: 'Cloud',
+    contactPoint:
+      'Proton nutzt eine Zero-Access-Verschlüsselung: Ohne vorab eingerichteten Notfallzugang kann Proton die Inhalte NICHT herausgeben. Die Vorsorge zu Lebzeiten ist entscheidend.',
+    steps: [
+      'Zu Lebzeiten „Emergency Access" (Notfallzugang) für eine Vertrauensperson einrichten — mit selbst gewählter Wartezeit.',
+      'Als hinterlegter Notfallkontakt den Zugriff anfordern; nach Ablauf der Wartezeit wird er automatisch gewährt.',
+    ],
+    links: [
+      { label: 'Proton: Emergency Access (Notfallzugang)', url: 'https://proton.me/support/emergency-access' },
+    ],
+    note: 'Ohne vorab eingerichteten Notfallzugang ist ein nachträglicher Zugriff praktisch ausgeschlossen.',
+    verified: true,
+    match: ['proton'],
+  },
 ];
 
 export const GENERAL_SECTIONS: GeneralSection[] = [
