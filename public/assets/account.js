@@ -98,6 +98,8 @@
         } else {
           html += '<p class="muted" style="margin-top:10px">Keine offensichtlichen Risiken erkannt.</p>';
         }
+        html += '<p style="margin-top:16px"><a class="btn btn-clay btn-sm" href="/api/compendium/whitepaper.pdf">White Paper (PDF) beziehen</a></p>' +
+          '<p class="muted" style="margin-top:4px">Enthält Ihre Risikoübersicht sowie offizielle Anlaufstellen zur Nachlasshandhabung im Todesfall.</p>';
       } else {
         html += '<p class="muted" style="margin-top:10px">Risikoanalyse, Vollständigkeitsprüfung und Export sind Teil von Premium. ' +
           '<a href="/app/upgrade.html" style="color:var(--forest);font-weight:600">Premium freischalten →</a></p>';
