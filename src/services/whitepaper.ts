@@ -11,8 +11,9 @@ import {
 /**
  * Erzeugt das Premium-White-Paper „Digitaler Nachlass" als PDF und streamt es
  * in den übergebenen Writable-Stream (in der Regel die Express-Response).
- * Enthält die persönlichen Risikoindikatoren des Nutzers sowie recherchierte,
- * offizielle Anlaufstellen und allgemeine Hinweise zur Nachlasshandhabung.
+ * Es enthält die persönlichen Risikoindikatoren des Nutzers sowie die
+ * recherchierten, offiziellen Anlaufstellen — bewusst nur für die vom Nutzer
+ * tatsächlich erfassten Dienste.
  */
 
 export interface WhitepaperContext {
@@ -33,6 +34,8 @@ const CLAY = '#C8633B';
 const INK = '#1B2A26';
 const SOFT = '#51625B';
 const LINE = '#D9D3C7';
+const PAPER = '#F6F2EA';
+const LIGHT = '#CFE0D9';
 
 export function generateWhitepaper(stream: Writable, ctx: WhitepaperContext): void {
   const doc = new PDFDocument({
@@ -54,12 +57,26 @@ export function generateWhitepaper(stream: Writable, ctx: WhitepaperContext): vo
     doc.moveTo(left, doc.y).lineTo(left + contentWidth, doc.y).lineWidth(0.7).strokeColor(LINE).stroke();
     doc.moveDown(0.6);
   };
-  const h1 = (t: string): void => { doc.font('Helvetica-Bold').fontSize(22).fillColor(FOREST_DEEP).text(t); doc.moveDown(0.3); };
-  const h2 = (t: string): void => { ensure(64); doc.moveDown(0.5); doc.font('Helvetica-Bold').fontSize(15).fillColor(FOREST).text(t); doc.moveDown(0.35); };
-  const h3 = (t: string, tag?: string): void => {
-    ensure(52);
-    doc.font('Helvetica-Bold').fontSize(11.5).fillColor(INK).text(t, { continued: Boolean(tag) });
-    if (tag) doc.font('Helvetica-Bold').fontSize(9).fillColor(CLAY).text('   ' + tag);
+  const h2 = (t: string): void => {
+    ensure(72);
+    doc.moveDown(0.7);
+    doc.font('Helvetica-Bold').fontSize(15).fillColor(FOREST).text(t);
+    const yLine = doc.y + 3;
+    doc.rect(left, yLine, 46, 3).fill(CLAY);
+    doc.fillColor(INK);
+    doc.y = yLine + 12;
+  };
+  const h3 = (t: string): void => {
+    ensure(54);
+    doc.font('Helvetica-Bold').fontSize(11.5).fillColor(FOREST_DEEP).text(t);
+    doc.moveDown(0.15);
+  };
+  const tag = (t: string): void => {
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor(CLAY).text(t.toUpperCase(), { characterSpacing: 0.5 });
+    doc.moveDown(0.15);
+  };
+  const betrifft = (t: string): void => {
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(FOREST).text('Betrifft Ihre erfassten Dienste: ' + t);
     doc.moveDown(0.2);
   };
   const body = (t: string): void => { doc.font('Helvetica').fontSize(10.5).fillColor(INK).text(t, { align: 'left', lineGap: 1.5 }); doc.moveDown(0.3); };
@@ -79,27 +96,32 @@ export function generateWhitepaper(stream: Writable, ctx: WhitepaperContext): vo
     doc.moveDown(0.25);
   };
 
-  // --- Kopf -----------------------------------------------------------------
-  doc.font('Helvetica-Bold').fontSize(16).fillColor(FOREST).text('diginachlass', { continued: true }).fillColor(CLAY).text('.ch');
-  doc.moveDown(0.6);
-  h1('White Paper: Digitaler Nachlass');
-  doc.font('Helvetica').fontSize(12).fillColor(SOFT).text('Persönlicher Leitfaden zur Nachlasshandhabung und Risikoübersicht');
-  doc.moveDown(0.4);
-  const dateStr = ctx.date.toLocaleDateString('de-CH', { day: '2-digit', month: 'long', year: 'numeric' });
-  doc.font('Helvetica').fontSize(9.5).fillColor(SOFT).text(`Erstellt für: ${ctx.userName || 'Sie'}  ·  Stand: ${dateStr}`);
-  doc.moveDown(0.6);
-  rule();
+  // --- Deckblatt ------------------------------------------------------------
+  doc.rect(0, 0, doc.page.width, 250).fill(FOREST);
+  doc.rect(0, 250, doc.page.width, 4).fill(CLAY);
+  doc.font('Helvetica-Bold').fontSize(15).fillColor(LIGHT).text('diginachlass.ch', left, 64);
+  doc.font('Helvetica-Bold').fontSize(30).fillColor(PAPER).text('White Paper', left, 108);
+  doc.font('Helvetica-Bold').fontSize(30).fillColor(PAPER).text('Digitaler Nachlass', left, 144);
+  doc.font('Helvetica').fontSize(12).fillColor(LIGHT).text('Persönlicher Leitfaden zur Nachlasshandhabung und Risikoübersicht', left, 192, { width: contentWidth });
+
+  doc.y = 286;
+  doc.x = left;
+  doc.font('Helvetica').fontSize(10).fillColor(SOFT)
+    .text(`Erstellt für: ${ctx.userName || 'Sie'}     ·     Stand: ${ctx.date.toLocaleDateString('de-CH', { day: '2-digit', month: 'long', year: 'numeric' })}`);
+  doc.moveDown(1);
   body(
     'Dieses Dokument fasst die aktuell in Ihrem Compendium erkannten Risikoindikatoren zusammen und ' +
-      'zeigt konkrete Anlaufstellen, wie im Todesfall mit den Konten bei den wichtigsten Anbietern zu ' +
-      'verfahren ist. Bewahren Sie es zusammen mit Ihren übrigen Vorsorgeunterlagen auf.',
+      'zeigt für die von Ihnen erfassten Dienste konkrete Anlaufstellen, wie im Todesfall zu verfahren ist. ' +
+      'Bewahren Sie es zusammen mit Ihren übrigen Vorsorgeunterlagen auf.',
   );
+
+  doc.addPage();
 
   // --- 1. Risikoübersicht ---------------------------------------------------
   h2('1. Ihre Risikoübersicht');
   body(
-    `Vollständigkeit Ihres Compendiums: ${ctx.compendium.completeness} %.  ` +
-      `Erfasste Dienste: ${ctx.compendium.total}.  ` +
+    `Vollständigkeit Ihres Compendiums: ${ctx.compendium.completeness} %.     ` +
+      `Erfasste Dienste: ${ctx.compendium.total}.     ` +
       `Hinterlegte Vertrauenspersonen: ${ctx.compendium.trustedPersons}.`,
   );
   if (ctx.compendium.risks.length > 0) {
@@ -109,32 +131,62 @@ export function generateWhitepaper(stream: Writable, ctx: WhitepaperContext): vo
     body('Aktuell wurden keine offensichtlichen Risiken erkannt. Halten Sie Ihr Compendium weiterhin aktuell.');
   }
 
-  // Personalisierung: welche erfassten Dienste haben unten eine Anleitung?
-  const userServices = ctx.compendium.categories.flatMap((c) => c.items.map((i) => i.serviceName));
-  const matched = new Set<GuideEntry>();
+  // --- 2. Anlaufstellen — nur für die erfassten Dienste ---------------------
+  const userServices = [
+    ...new Set(
+      ctx.compendium.categories
+        .flatMap((c) => c.items.map((i) => i.serviceName))
+        .map((s) => (s || '').trim())
+        .filter(Boolean),
+    ),
+  ];
+  const matched = new Map<GuideEntry, string[]>();
+  const unmatched: string[] = [];
   for (const s of userServices) {
     const e = guideEntryForService(s);
-    if (e) matched.add(e);
-  }
-  if (matched.size > 0) {
-    body(
-      'Zu folgenden von Ihnen erfassten Diensten finden Sie im nächsten Abschnitt konkrete Anleitungen: ' +
-        [...matched].map((e) => e.service).join(', ') + '.',
-    );
+    if (e) {
+      const list = matched.get(e) || [];
+      list.push(s);
+      matched.set(e, list);
+    } else {
+      unmatched.push(s);
+    }
   }
 
-  // --- 2. Anlaufstellen -----------------------------------------------------
-  h2('2. Anlaufstellen bei wichtigen Anbietern');
-  body('Für jeden Anbieter finden Sie die zuständige Stelle, die nötigen Schritte und den offiziellen Link.');
-  for (const entry of DEATH_HANDLING_GUIDE) {
-    ensure(140);
-    h3(`${entry.service}  (${entry.category})`, matched.has(entry) ? 'betrifft Ihr Konto' : undefined);
-    body(entry.contactPoint);
-    steps(entry.steps);
-    for (const l of entry.links) linkPair(l.label, l.url);
-    if (entry.note) small('Hinweis: ' + entry.note);
-    if (!entry.verified) small('Diese Angabe ist ohne bestätigtes Self-Service-Formular; bitte prüfen Sie den aktuellen Support des Anbieters.');
-    doc.moveDown(0.5);
+  h2('2. Anlaufstellen für Ihre erfassten Dienste');
+
+  if (matched.size === 0 && unmatched.length === 0) {
+    body(
+      'Sie haben derzeit keine Dienste im Compendium erfasst. Sobald Sie Dienste hinzufügen, listet dieses ' +
+        'White Paper die passenden Anlaufstellen für genau diese Dienste auf.',
+    );
+  } else {
+    body('Nachfolgend finden Sie zu jedem erfassten Dienst die zuständige Stelle, die nötigen Schritte und den offiziellen Link.');
+    // In der Reihenfolge des Katalogs ausgeben (stabil), aber nur die Treffer.
+    for (const entry of DEATH_HANDLING_GUIDE) {
+      const names = matched.get(entry);
+      if (!names) continue;
+      ensure(150);
+      h3(entry.service);
+      tag(entry.category);
+      betrifft(names.join(', '));
+      body(entry.contactPoint);
+      steps(entry.steps);
+      for (const l of entry.links) linkPair(l.label, l.url);
+      if (entry.note) small('Hinweis: ' + entry.note);
+      if (!entry.verified) small('Diese Angabe ist ohne bestätigtes Self-Service-Formular; bitte prüfen Sie den aktuellen Support des Anbieters.');
+      doc.moveDown(0.4);
+      rule();
+    }
+    if (unmatched.length > 0) {
+      ensure(90);
+      h3('Weitere erfasste Dienste');
+      body('Für die folgenden erfassten Dienste ist keine spezifische Anleitung hinterlegt: ' + unmatched.join(', ') + '.');
+      body(
+        'Prüfen Sie die Hilfe- bzw. Support-Seiten des jeweiligen Anbieters nach einem Vorgehen im Todesfall ' +
+          'und ob sich zu Lebzeiten ein Nachlass- oder Notfallkontakt einrichten lässt.',
+      );
+    }
   }
 
   // --- 3. Rechtliches & Vorsorge -------------------------------------------
