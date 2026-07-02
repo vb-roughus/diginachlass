@@ -10,6 +10,18 @@
     kommunikation: 'Kommunikation', social_media: 'Social Media', finanzen: 'Finanzen',
     cloud: 'Cloud', krypto: 'Krypto', unterhaltung: 'Unterhaltung', sonstiges: 'Sonstiges',
   };
+  const CAT_ORDER = ['kommunikation', 'social_media', 'finanzen', 'cloud', 'krypto', 'unterhaltung', 'sonstiges'];
+  // Kategorie-Icons – dieselbe Bildsprache wie die Kategorien auf der Landingpage.
+  const CAT_ICONS = {
+    kommunikation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>',
+    social_media: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="7" r="2.3"/><circle cx="12" cy="17.5" r="2.3"/><path d="M8.1 8.2 10.4 15.4M15.9 8.2 13.6 15.4M8.2 7h7.6"/></svg>',
+    finanzen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.7"/><path d="M6 9.4v5.2M18 9.4v5.2"/></svg>',
+    cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 18.5H7a4.2 4.2 0 0 1-.5-8.37A5.6 5.6 0 0 1 17.4 11.4a3.6 3.6 0 0 1 .1 7.1Z"/></svg>',
+    krypto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.4 20.3 7v10L12 21.6 3.7 17V7z"/><path d="M10 9.4h3.1a1.8 1.8 0 0 1 0 3.6H10zm0 0v6.2m0-2.6h3.4a1.8 1.8 0 0 1 0 3.6H10"/></svg>',
+    unterhaltung: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M10 8.4 16 12l-6 3.6z" fill="currentColor" stroke="none"/></svg>',
+    sonstiges: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  };
+  const CHEVRON = '<svg class="svc-cat-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 
   // Kuratierte Liste gängiger Dienste je Kategorie (inkl. typischer Schweizer
   // Anbieter). Dient als durchsuchbare Auswahl; nicht gelistete Dienste werden
@@ -149,15 +161,33 @@
     try {
       const { items } = await api('/accounts');
       addedNames = new Set(items.map((a) => (a.serviceName || '').trim().toLowerCase()));
-      if (!items.length) { el.innerHTML = '<p class="muted">Noch keine Dienste erfasst.</p>'; return; }
-      el.innerHTML = items.map((a) =>
+
+      // Nach Kategorie gruppieren.
+      const byCat = {};
+      for (const a of items) (byCat[a.category] = byCat[a.category] || []).push(a);
+
+      const itemRow = (a) =>
         '<div class="item"><div class="top"><span class="name">' + escapeHtml(a.serviceName) + '</span>' +
         '<button class="btn btn-ghost btn-sm" data-del="' + a.id + '">Löschen</button></div>' +
-        '<div class="meta">' + escapeHtml(CAT_LABELS[a.category] || a.category) + ' · Relevanz: ' + a.relevance +
-        ' · Zugang: ' + a.accessDocumented + '</div>' +
+        '<div class="meta">Relevanz: ' + a.relevance + ' · Zugang: ' + a.accessDocumented + '</div>' +
         (a.notes ? '<div class="muted" style="margin-top:6px">' + escapeHtml(a.notes) + '</div>' : '') +
-        '</div>'
-      ).join('');
+        '</div>';
+
+      const cats = CAT_ORDER.map((cat) => {
+        const list = byCat[cat] || [];
+        const body = list.length
+          ? list.map(itemRow).join('')
+          : '<p class="svc-cat-empty">Noch keine Dienste in dieser Kategorie.</p>';
+        return '<details class="svc-cat"' + (list.length ? ' open' : '') + '>' +
+          '<summary class="svc-cat-head"><span class="cat-ico">' + (CAT_ICONS[cat] || '') + '</span>' +
+          '<span class="svc-cat-title">' + escapeHtml(CAT_LABELS[cat] || cat) + '</span>' +
+          '<span class="svc-cat-count">' + list.length + '</span>' + CHEVRON + '</summary>' +
+          '<div class="svc-cat-body">' + body + '</div></details>';
+      }).join('');
+
+      el.innerHTML = '<div class="svc-cats">' + cats + '</div>' +
+        (items.length ? '' : '<p class="muted" style="margin-top:12px">Noch keine Dienste erfasst – fügen Sie unten Ihren ersten Dienst hinzu.</p>');
+
       el.querySelectorAll('[data-del]').forEach((b) =>
         b.addEventListener('click', () => delAccount(b.dataset.del)));
     } catch (err) {

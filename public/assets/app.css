@@ -212,3 +212,21 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 .combo-added{font-weight:600;font-size:.76rem;color:var(--ok)}
 .combo-cat{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);flex:0 0 auto}
 .combo-empty{padding:10px;color:var(--ink-soft);font-size:.88rem}
+
+/* Dienste nach Kategorie – aufklappbar, im Stil der Landingpage-Kategorien */
+.svc-cats{display:flex;flex-direction:column;gap:12px}
+.svc-cat{border:1px solid var(--line);border-radius:var(--r);background:var(--elev);overflow:hidden;transition:border-color .2s}
+.svc-cat[open]{border-color:rgba(63,189,151,.35)}
+.svc-cat>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px 16px}
+.svc-cat>summary::-webkit-details-marker{display:none}
+.svc-cat .cat-ico{width:44px;height:44px;border-radius:12px;background:var(--sage);color:var(--forest);display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:background .25s,color .25s}
+.svc-cat .cat-ico svg{width:22px;height:22px}
+.svc-cat>summary:hover .cat-ico,.svc-cat[open] .cat-ico{background:var(--forest);color:#08110D}
+.svc-cat-title{font-family:var(--font-display);font-weight:600;font-size:1.12rem;color:var(--forest-ink);flex:1;min-width:0}
+.svc-cat-count{font-family:var(--font-mono);font-size:.74rem;color:var(--ink-soft);background:var(--sage);border:1px solid var(--line);border-radius:999px;padding:3px 10px;flex:0 0 auto}
+.svc-cat-chev{color:var(--ink-soft);flex:0 0 auto;transition:transform .25s var(--ease)}
+.svc-cat[open] .svc-cat-chev{transform:rotate(180deg)}
+.svc-cat-body{padding:2px 16px 14px}
+.svc-cat-body .item{background:transparent;border:0;border-top:1px solid var(--line-soft);border-radius:0;margin:0;padding:12px 2px}
+.svc-cat-body .item:first-child{border-top:0;padding-top:4px}
+.svc-cat-empty{color:var(--ink-soft);font-size:.88rem;padding:2px 2px 4px}
