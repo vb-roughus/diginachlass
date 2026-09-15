@@ -113,44 +113,16 @@
     <!-- Dienste -->
     <section class="panel" data-panel="services" id="services">
       <div class="card">
-        <h2>Meine Dienste</h2>
-        <p class="muted">Erfassen Sie Ihre digitalen Konten – nur Metadaten, niemals Passwörter oder Zugangsdaten.</p>
+        <div class="card-head">
+          <div>
+            <h2>Meine Dienste</h2>
+            <p class="muted">Erfassen Sie Ihre digitalen Konten – nur Metadaten, niemals Passwörter oder Zugangsdaten.</p>
+          </div>
+          <button type="button" class="icon-btn" id="svc-add-toggle" aria-haspopup="dialog" aria-expanded="false" title="Dienst erfassen" aria-label="Dienst erfassen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
         <div id="accounts-list" style="margin-top:14px"></div>
-        <div class="sep"></div>
-        <h2 style="font-size:1.05rem">Dienst erfassen</h2>
-        <p class="muted">Tippen Sie zum Suchen und wählen Sie einen gängigen Dienst aus der Liste – die Kategorie wird übernommen. Für nicht gelistete Dienste geben Sie einfach einen eigenen Namen ein.</p>
-        <form id="account-form" style="margin-top:12px">
-          <div class="row">
-            <div class="field" style="flex:2">
-              <label for="svc-name">Dienst</label>
-              <div class="combo" id="svc-combo">
-                <input type="text" id="svc-name" placeholder="Dienst suchen oder eingeben …" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="svc-combo-panel" required>
-                <div class="combo-panel" id="svc-combo-panel" role="listbox" hidden></div>
-              </div>
-            </div>
-            <div class="field"><label for="svc-cat">Kategorie</label>
-              <select id="svc-cat">
-                <option value="kommunikation">Kommunikation</option>
-                <option value="social_media">Social Media</option>
-                <option value="finanzen">Finanzen</option>
-                <option value="cloud">Cloud</option>
-                <option value="krypto">Krypto</option>
-                <option value="unterhaltung">Unterhaltung</option>
-                <option value="sonstiges">Sonstiges</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field"><label>Relevanz</label>
-              <select id="svc-rel"><option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select>
-            </div>
-            <div class="field"><label>Zugang dokumentiert?</label>
-              <select id="svc-doc"><option value="nein" selected>nein</option><option value="teilweise">teilweise</option><option value="ja">ja</option></select>
-            </div>
-          </div>
-          <div class="field"><label>Notizen <span class="muted">(keine Passwörter!)</span></label><textarea id="svc-notes" placeholder="Hinweise für Angehörige – ohne Zugangsdaten"></textarea></div>
-          <button class="btn btn-primary btn-sm" type="submit">Dienst hinzufügen</button>
-        </form>
       </div>
     </section>
 
@@ -320,6 +292,49 @@
     </section>
 
   </main>
+
+  <!-- Dienst erfassen: Overlay -->
+  <div class="modal-overlay" id="svc-modal" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="svc-modal-title">
+      <h3 class="modal-title" id="svc-modal-title">Dienst erfassen</h3>
+      <p class="modal-text">Tippen Sie zum Suchen und wählen Sie einen gängigen Dienst aus der Liste – die Kategorie wird übernommen. Für nicht gelistete Dienste geben Sie einfach einen eigenen Namen ein.</p>
+      <form id="account-form" style="margin-top:18px">
+          <div class="row">
+            <div class="field" style="flex:2">
+              <label for="svc-name">Dienst</label>
+              <div class="combo" id="svc-combo">
+                <input type="text" id="svc-name" placeholder="Dienst suchen oder eingeben …" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="svc-combo-panel" required>
+                <div class="combo-panel" id="svc-combo-panel" role="listbox" hidden></div>
+              </div>
+            </div>
+            <div class="field"><label for="svc-cat">Kategorie</label>
+              <select id="svc-cat">
+                <option value="kommunikation">Kommunikation</option>
+                <option value="social_media">Social Media</option>
+                <option value="finanzen">Finanzen</option>
+                <option value="cloud">Cloud</option>
+                <option value="krypto">Krypto</option>
+                <option value="unterhaltung">Unterhaltung</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Relevanz</label>
+              <select id="svc-rel"><option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select>
+            </div>
+            <div class="field"><label>Zugang dokumentiert?</label>
+              <select id="svc-doc"><option value="nein" selected>nein</option><option value="teilweise">teilweise</option><option value="ja">ja</option></select>
+            </div>
+          </div>
+          <div class="field"><label>Notizen <span class="muted">(keine Passwörter!)</span></label><textarea id="svc-notes" placeholder="Hinweise für Angehörige – ohne Zugangsdaten"></textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="svc-cancel">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" type="submit">Dienst hinzufügen</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Overlay für die mobile Seitenleiste -->
   <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>

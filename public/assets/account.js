@@ -106,6 +106,47 @@
     document.addEventListener('click', (e) => { if (!combo.contains(e.target)) close(); });
   }
 
+  // ---- Dienst erfassen: Overlay ---------------------------------------------
+  let closeServiceModal = function () {};
+
+  function setupServiceModal() {
+    const overlay = $('#svc-modal');
+    const openBtn = $('#svc-add-toggle');
+    const cancelBtn = $('#svc-cancel');
+    const form = $('#account-form');
+    if (!overlay || !openBtn || !form) return;
+    let previous = null;
+
+    function open() {
+      previous = document.activeElement;
+      overlay.hidden = false;
+      openBtn.setAttribute('aria-expanded', 'true');
+      $('#svc-name').focus();
+    }
+    function close() {
+      overlay.hidden = true;
+      openBtn.setAttribute('aria-expanded', 'false');
+      form.reset();
+      const panel = $('#svc-combo-panel');
+      if (panel) panel.hidden = true;
+      if (previous && previous.focus) previous.focus();
+    }
+    closeServiceModal = close;
+
+    openBtn.addEventListener('click', open);
+    if (cancelBtn) cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) close(); });
+
+    // Capture-Phase: hier ist noch sichtbar, ob die Auswahlliste offen war.
+    // Escape schliesst dann zuerst nur diese und erst danach das Overlay.
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || overlay.hidden) return;
+      const panel = $('#svc-combo-panel');
+      if (panel && !panel.hidden) return;
+      close();
+    }, true);
+  }
+
   // ---- Init ----------------------------------------------------------------
   async function init() {
     account = await window.DNL.currentAccount();
@@ -129,6 +170,7 @@
     renderBilling();
     render2fa();
     initCombo();
+    setupServiceModal();
     setupAdmin();
     await Promise.all([loadServiceCatalog(), loadCompendium(), loadAccounts(), loadTrusted()]);
   }
@@ -226,7 +268,7 @@
     if (notes) body.notes = notes;
     try {
       await api('/accounts', { method: 'POST', body });
-      e.target.reset();
+      closeServiceModal();
       await loadAccounts(); await loadCompendium();
       flash('ok', 'Dienst hinzugefügt.');
     } catch (err) { flash('error', window.DNL.fieldErrors(err)); }
