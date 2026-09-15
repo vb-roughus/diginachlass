@@ -279,6 +279,26 @@ model SecurityEvent {
   @@map("security_events")
 }
 
+// ---------------------------------------------------------------------------
+// Dienst-Katalog (vom Administrator gepflegt)
+// ---------------------------------------------------------------------------
+
+// Auswahlliste der Dienste, die Nutzenden bei der Erfassung vorgeschlagen wird.
+// Enthält ausschliesslich Stammdaten — niemals Zugangsdaten.
+model CatalogService {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  category  NachlassCategory
+  provider  String? // optionaler Slug, z. B. "google"
+  sortOrder Int              @default(0)
+  active    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([category])
+  @@map("catalog_services")
+}
+
 // Fortlaufende Zähler (z. B. Belegnummern). Atomar via increment.
 model Counter {
   name  String @id

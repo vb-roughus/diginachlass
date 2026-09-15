@@ -12,6 +12,7 @@ const TABLES = [
   'password_resets',
   'totp_secrets',
   'counters',
+  'catalog_services',
   'session',
   'users',
 ];

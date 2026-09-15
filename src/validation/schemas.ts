@@ -98,6 +98,18 @@ export const nachlassAccountSchema = z.object({
 
 export const nachlassAccountUpdateSchema = nachlassAccountSchema.partial();
 
+// --- Dienst-Katalog (vom Administrator gepflegt) -----------------------------
+// Stammdaten der Auswahlliste — niemals Zugangsdaten.
+export const catalogServiceSchema = z.object({
+  name: z.string().trim().min(1, 'Bitte einen Namen angeben.').max(120),
+  category: nachlassCategoryEnum,
+  provider: z.string().trim().max(80).nullish(),
+  sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
+  active: z.boolean().default(true),
+});
+
+export const catalogServiceUpdateSchema = catalogServiceSchema.partial();
+
 export const trustedPersonSchema = z.object({
   name: z.string().trim().min(1, 'Bitte den Namen angeben.').max(120),
   relationship: z.string().trim().min(1, 'Bitte die Beziehung angeben.').max(120),
