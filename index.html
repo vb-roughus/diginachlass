@@ -131,6 +131,24 @@ h1,h2,h3{font-family:var(--font-display);font-weight:500;line-height:1.05;letter
 .nav-burger{display:none;width:42px;height:42px;border-radius:var(--r-sm);border:1px solid var(--line);align-items:center;justify-content:center;color:var(--ink)}
 .mobile-menu{display:none}
 
+/* Nutzer-Menü (nur bei bestehender Anmeldung) */
+.user-menu{position:relative}
+.user-btn{display:inline-flex;align-items:center;gap:9px;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:var(--font-body);font-weight:500;font-size:.92rem;transition:border-color .2s, background .2s}
+.user-btn:hover{border-color:var(--forest);background:rgba(255,255,255,.05)}
+.user-avatar{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--forest);color:var(--paper);font-family:var(--font-mono);font-size:.74rem;font-weight:600;flex:0 0 auto;letter-spacing:.02em}
+.user-btn .chev{transition:transform .25s var(--ease);opacity:.7}
+.user-menu.open .user-btn .chev{transform:rotate(180deg)}
+.user-pop{position:absolute;top:calc(100% + 10px);right:0;min-width:250px;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:8px;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s var(--ease), transform .2s var(--ease), visibility .2s;z-index:60}
+.user-menu.open .user-pop{opacity:1;visibility:visible;transform:none}
+.user-pop-head{display:flex;align-items:center;gap:11px;padding:10px 10px 12px;border-bottom:1px solid var(--line-soft);margin-bottom:6px}
+.user-pop-head .user-avatar{width:38px;height:38px;font-size:.82rem}
+.user-nm{font-weight:600;font-size:.93rem;line-height:1.25}
+.user-em{font-size:.78rem;color:var(--ink-soft);word-break:break-all;line-height:1.35}
+.user-plan{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest);border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-top:6px;display:inline-block}
+.user-pop a,.user-pop button{display:block;width:100%;text-align:left;padding:10px 11px;border-radius:9px;font-size:.92rem;color:var(--ink);font-family:var(--font-body);font-weight:500;background:none;border:0;transition:background .15s}
+.user-pop a:hover,.user-pop button:hover{background:rgba(255,255,255,.07)}
+.user-pop .danger{color:var(--clay)}
+
 /* ---------- Hero ---------- */
 .hero{position:relative;overflow:hidden;padding-top:clamp(46px,7vw,84px);padding-bottom:clamp(64px,9vw,118px)}
 .hero-glow{position:absolute;inset:0;z-index:0;pointer-events:none}
@@ -364,6 +382,8 @@ h1,h2,h3{font-family:var(--font-display);font-weight:500;line-height:1.05;letter
   .nav-links{display:none}
   .nav-burger{display:flex}
   .nav-right .btn{display:none}
+  .user-btn .user-name{display:none}
+  .user-btn{padding:5px}
   .mobile-menu{display:block;overflow:hidden;max-height:0;transition:max-height .4s var(--ease);background:rgba(14,21,18,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft)}
   .mobile-menu.open{max-height:420px}
   .mobile-menu .mm-inner{padding:14px 28px 24px;display:grid;gap:4px}
@@ -622,6 +642,110 @@ function brandWordmark(){
   return brandMark() + '<span>' + esc(content.brand.name) + '<span class="tld">' + esc(content.brand.tld) + '</span></span>';
 }
 
+/* ---------- Anmeldestatus / Nutzer-Menü ---------- */
+let authUser = null;      // { user, entitlement } oder null
+let csrfToken = null;
+let userMenuDocWired = false;
+
+async function loadAuthUser(){
+  try {
+    const r = await fetch("/api/account", { credentials: "same-origin" });
+    if (!r.ok) return null;                     // 401 = nicht angemeldet
+    const data = await r.json();
+    return data && data.user ? data : null;
+  } catch (e){ return null; }
+}
+
+function userInitials(u){
+  const src = String(u.name || "").trim() || String(u.email || "");
+  const parts = src.split(/[\s@._-]+/).filter(Boolean);
+  const a = (parts[0] || "?").charAt(0);
+  const b = parts[1] ? parts[1].charAt(0) : "";
+  return (a + b).toUpperCase();
+}
+
+async function doLogout(){
+  try {
+    if (!csrfToken){
+      const r = await fetch("/api/csrf", { credentials: "same-origin" });
+      csrfToken = (await r.json()).csrfToken;
+    }
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "x-csrf-token": csrfToken },
+    });
+  } catch (e){ /* auch bei Fehler neu laden */ }
+  location.reload();
+}
+
+/* Kopfbereich rechts: Avatar-Menü wenn angemeldet, sonst Anmelden/Registrieren */
+function authNavHtml(){
+  if (!authUser){
+    return '<a class="nav-login" href="/app/login.html">Anmelden</a>' +
+      '<a class="btn btn-primary btn-sm" href="/app/register.html">' + esc(content.brand.ctaLabel) + '</a>';
+  }
+  const u = authUser.user;
+  const premium = !!(authUser.entitlement && authUser.entitlement.premium);
+  const ini = esc(userInitials(u));
+  return '<div class="user-menu" id="user-menu">' +
+      '<button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false">' +
+        '<span class="user-avatar">' + ini + '</span>' +
+        '<span class="user-name">' + esc(u.name || u.email) + '</span>' +
+        '<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="user-pop" id="user-pop" role="menu">' +
+        '<div class="user-pop-head">' +
+          '<span class="user-avatar">' + ini + '</span>' +
+          '<div><div class="user-nm">' + esc(u.name || "Mein Konto") + '</div>' +
+            '<div class="user-em">' + esc(u.email) + '</div>' +
+            '<span class="user-plan">' + (premium ? "Premium" : "Kostenlos") + '</span></div>' +
+        '</div>' +
+        '<a href="/app/account.html" role="menuitem">Zum Konto</a>' +
+        (premium ? "" : '<a href="/app/upgrade.html" role="menuitem">Premium freischalten</a>') +
+        '<button type="button" class="danger" id="logout-btn" role="menuitem">Abmelden</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function authMobileHtml(){
+  if (!authUser){
+    return '<a class="mm-link" href="/app/login.html">Anmelden</a>' +
+      '<a class="btn btn-primary mm-link" href="/app/register.html">' + esc(content.brand.ctaLabel) + '</a>';
+  }
+  return '<a class="mm-link" href="/app/account.html">Zum Konto</a>' +
+    '<a class="mm-link" href="#" id="mm-logout">Abmelden</a>';
+}
+
+function wireUserMenu(){
+  const menu = $("#user-menu");
+  if (menu){
+    const btn = $("#user-btn");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = menu.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    const logoutBtn = $("#logout-btn");
+    if (logoutBtn) logoutBtn.addEventListener("click", doLogout);
+    if (!userMenuDocWired){
+      userMenuDocWired = true;
+      document.addEventListener("click", (e) => {
+        const m = $("#user-menu");
+        if (m && !m.contains(e.target)) m.classList.remove("open");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape"){
+          const m = $("#user-menu");
+          if (m) m.classList.remove("open");
+        }
+      });
+    }
+  }
+  const mmLogout = $("#mm-logout");
+  if (mmLogout) mmLogout.addEventListener("click", (e) => { e.preventDefault(); doLogout(); });
+}
+
 function renderHeader(){
   const c = content;
   const links = c.brand.nav.map(l => '<a href="' + esc(l.href) + '">' + esc(l.label) + '</a>').join("");
@@ -630,16 +754,13 @@ function renderHeader(){
       '<a class="brand" href="#top">' + brandWordmark() + '</a>' +
       '<nav class="nav-links">' + links + '</nav>' +
       '<div class="nav-right">' +
-        '<a class="nav-login" href="/app/login.html">Anmelden</a>' +
-        '<a class="btn btn-primary btn-sm" href="/app/register.html">' + esc(c.brand.ctaLabel) + '</a>' +
+        authNavHtml() +
         '<button class="nav-burger" id="burger" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
       '</div>' +
     '</div>';
 
   const mlinks = c.brand.nav.map(l => '<a href="' + esc(l.href) + '" class="mm-link">' + esc(l.label) + '</a>').join("");
-  $("#mobile-menu").innerHTML = '<div class="mm-inner">' + mlinks +
-    '<a class="mm-link" href="/app/login.html">Anmelden</a>' +
-    '<a class="btn btn-primary mm-link" href="/app/register.html">' + esc(c.brand.ctaLabel) + '</a></div>';
+  $("#mobile-menu").innerHTML = '<div class="mm-inner">' + mlinks + authMobileHtml() + '</div>';
 }
 
 function renderMain(){
@@ -847,6 +968,7 @@ function wireNav(){
   document.querySelectorAll(".mm-link").forEach(a =>
     a.addEventListener("click", () => menu.classList.remove("open"))
   );
+  wireUserMenu();
 }
 
 let rerenderTimer;
@@ -1098,6 +1220,13 @@ async function init(){
   renderAll();
   wireAdmin();
   wireScroll();
+
+  // Anmeldestatus nachladen; bei bestehender Session den Kopfbereich ersetzen.
+  authUser = await loadAuthUser();
+  if (authUser){
+    renderHeader();
+    wireNav();
+  }
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
