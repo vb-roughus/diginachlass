@@ -62,7 +62,7 @@ h2{font-family:var(--font-display);font-weight:600;font-size:1.3rem;color:var(--
 /* Forms */
 .field{margin-bottom:16px}
 label{display:block;font-size:.86rem;font-weight:600;margin-bottom:6px;color:var(--ink)}
-input[type=text],input[type=email],input[type=password],select,textarea{
+input[type=text],input[type=email],input[type=password],input[type=search],select,textarea{
   width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;
   font-family:var(--font-body);font-size:.98rem;background:var(--elev);color:var(--ink);transition:border-color .2s,box-shadow .2s;
 }
@@ -212,6 +212,18 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 .combo-added{font-weight:600;font-size:.76rem;color:var(--ok)}
 .combo-cat{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);flex:0 0 auto}
 .combo-empty{padding:10px;color:var(--ink-soft);font-size:.88rem}
+
+/* Karten-Kopf mit Aktionsknopf oben rechts */
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.card-head .muted{margin-top:2px}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--elev);color:var(--ink);cursor:pointer;transition:background .2s,border-color .2s}
+.icon-btn:hover{border-color:var(--forest);background:var(--sage)}
+.icon-btn svg{width:20px;height:20px;transition:transform .25s var(--ease)}
+.icon-btn[aria-expanded="true"]{border-color:var(--forest);color:var(--forest)}
+.icon-btn[aria-expanded="true"] svg{transform:rotate(45deg)}
+.cat-form{margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:var(--r);background:var(--elev)}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap}
+.search-input{width:100%;margin:18px 0 12px}
 
 /* Admin-Zone in der Seitenleiste */
 .side-sep{height:1px;background:var(--line);margin:16px 4px 12px}

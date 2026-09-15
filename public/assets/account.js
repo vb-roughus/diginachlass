@@ -368,13 +368,46 @@
   });
 
   // ---- Admin-Zone: Dienst-Katalog -------------------------------------------
+  let catalogItems = [];
+  // Welche Kategorien offen sind, überdauert das Neuzeichnen der Liste.
+  const catalogOpen = new Set();
+
   function setupAdmin() {
     if (!account || !account.user || account.user.role !== 'admin') return;
     const box = $('#side-admin');
     if (box) box.hidden = false;
+
     const form = $('#cat-form');
     if (form) form.addEventListener('submit', createCatalogService);
+
+    // "+" oben rechts blendet das Formular ein und setzt den Fokus.
+    const toggle = $('#cat-add-toggle');
+    if (toggle && form) {
+      toggle.addEventListener('click', () => {
+        const show = form.hidden;
+        form.hidden = !show;
+        toggle.setAttribute('aria-expanded', show ? 'true' : 'false');
+        toggle.title = show ? 'Formular schliessen' : 'Dienst hinzufügen';
+        if (show) $('#cat-name').focus();
+      });
+    }
+    const cancel = $('#cat-cancel');
+    if (cancel) cancel.addEventListener('click', closeCatalogForm);
+
+    const search = $('#cat-search');
+    if (search) search.addEventListener('input', renderCatalogList);
+
     loadCatalogAdmin();
+  }
+
+  function closeCatalogForm() {
+    const form = $('#cat-form');
+    const toggle = $('#cat-add-toggle');
+    if (form) form.hidden = true;
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.title = 'Dienst hinzufügen';
+    }
   }
 
   async function loadCatalogAdmin() {
@@ -382,37 +415,74 @@
     if (!el) return;
     try {
       const { items } = await api('/admin/services');
-      if (!items.length) {
-        el.innerHTML = '<p class="muted">Noch keine Dienste im Katalog. Legen Sie unten den ersten an.</p>';
-        return;
-      }
-      const byCat = {};
-      for (const i of items) (byCat[i.category] = byCat[i.category] || []).push(i);
-
-      el.innerHTML = CAT_ORDER.filter((c) => byCat[c]).map((c) =>
-        '<div style="margin-bottom:16px"><div class="admin-cat-label">' +
-          escapeHtml(CAT_LABELS[c] || c) + ' · ' + byCat[c].length + '</div>' +
-        byCat[c].map((i) =>
-          '<div class="item"><div class="top">' +
-            '<span class="name">' + escapeHtml(i.name) +
-              (i.active ? '' : ' <span class="badge free" style="margin-left:8px">inaktiv</span>') +
-            '</span>' +
-            '<span style="display:flex;gap:8px;flex:0 0 auto">' +
-              '<button class="btn btn-ghost btn-sm" data-toggle="' + i.id + '" data-active="' + (i.active ? '1' : '0') + '">' +
-                (i.active ? 'Deaktivieren' : 'Aktivieren') + '</button>' +
-              '<button class="btn btn-ghost btn-sm" data-delcat="' + i.id + '">Löschen</button>' +
-            '</span>' +
-          '</div></div>'
-        ).join('') + '</div>'
-      ).join('');
-
-      el.querySelectorAll('[data-delcat]').forEach((b) =>
-        b.addEventListener('click', () => deleteCatalogService(b.dataset.delcat)));
-      el.querySelectorAll('[data-toggle]').forEach((b) =>
-        b.addEventListener('click', () => toggleCatalogService(b.dataset.toggle, b.dataset.active !== '1')));
+      catalogItems = items;
+      renderCatalogList();
     } catch (err) {
       el.innerHTML = '<p class="muted">' + escapeHtml(err.message) + '</p>';
     }
+  }
+
+  function catalogRow(i) {
+    return '<div class="item"><div class="top">' +
+      '<span class="name">' + escapeHtml(i.name) +
+        (i.active ? '' : ' <span class="badge free" style="margin-left:8px">inaktiv</span>') +
+      '</span>' +
+      '<span style="display:flex;gap:8px;flex:0 0 auto">' +
+        '<button class="btn btn-ghost btn-sm" data-toggle="' + i.id + '" data-active="' + (i.active ? '1' : '0') + '">' +
+          (i.active ? 'Deaktivieren' : 'Aktivieren') + '</button>' +
+        '<button class="btn btn-ghost btn-sm" data-delcat="' + i.id + '">Löschen</button>' +
+      '</span>' +
+    '</div></div>';
+  }
+
+  function renderCatalogList() {
+    const el = $('#cat-list');
+    if (!el) return;
+
+    if (!catalogItems.length) {
+      el.innerHTML = '<p class="muted">Noch keine Dienste im Katalog. Legen Sie über „+" den ersten an.</p>';
+      return;
+    }
+
+    const searchEl = $('#cat-search');
+    const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+    const matches = q
+      ? catalogItems.filter((i) =>
+          i.name.toLowerCase().includes(q) || (CAT_LABELS[i.category] || '').toLowerCase().includes(q))
+      : catalogItems;
+
+    if (!matches.length) {
+      el.innerHTML = '<p class="muted">Kein Treffer für „' + escapeHtml(q) + '".</p>';
+      return;
+    }
+
+    const byCat = {};
+    for (const i of matches) (byCat[i.category] = byCat[i.category] || []).push(i);
+
+    el.innerHTML = '<div class="svc-cats">' + CAT_ORDER.filter((c) => byCat[c]).map((c) => {
+      // Standard: zugeklappt. Bei aktiver Suche aufklappen, sonst wären die
+      // Treffer hinter zugeklappten Kategorien unsichtbar.
+      const open = q ? true : catalogOpen.has(c);
+      return '<details class="svc-cat" data-cat="' + c + '"' + (open ? ' open' : '') + '>' +
+        '<summary class="svc-cat-head"><span class="cat-ico">' + (CAT_ICONS[c] || '') + '</span>' +
+        '<span class="svc-cat-title">' + escapeHtml(CAT_LABELS[c] || c) + '</span>' +
+        '<span class="svc-cat-count">' + byCat[c].length + '</span>' + CHEVRON + '</summary>' +
+        '<div class="svc-cat-body">' + byCat[c].map(catalogRow).join('') + '</div></details>';
+    }).join('') + '</div>';
+
+    el.querySelectorAll('details.svc-cat').forEach((d) =>
+      d.addEventListener('toggle', () => {
+        // Bei aktiver Suche wird "offen" erzwungen — das ist keine Nutzer-
+        // entscheidung und darf den gemerkten Zustand nicht überschreiben.
+        const active = $('#cat-search') && $('#cat-search').value.trim();
+        if (active) return;
+        if (d.open) catalogOpen.add(d.dataset.cat);
+        else catalogOpen.delete(d.dataset.cat);
+      }));
+    el.querySelectorAll('[data-delcat]').forEach((b) =>
+      b.addEventListener('click', () => deleteCatalogService(b.dataset.delcat)));
+    el.querySelectorAll('[data-toggle]').forEach((b) =>
+      b.addEventListener('click', () => toggleCatalogService(b.dataset.toggle, b.dataset.active !== '1')));
   }
 
   async function createCatalogService(e) {
@@ -426,6 +496,9 @@
       await api('/admin/services', { method: 'POST', body });
       $('#cat-form').reset();
       $('#cat-sort').value = '0';
+      closeCatalogForm();
+      // Die Kategorie des neuen Dienstes aufklappen, damit er sichtbar ist.
+      catalogOpen.add(body.category);
       flash('ok', 'Dienst wurde zum Katalog hinzugefügt.');
       await Promise.all([loadCatalogAdmin(), loadServiceCatalog()]);
     } catch (err) { flash('error', window.DNL.fieldErrors(err)); }
