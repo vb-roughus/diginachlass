@@ -295,8 +295,30 @@ model CatalogService {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
+  compendium CompendiumEntry?
+
   @@index([category])
   @@map("catalog_services")
+}
+
+// Redaktionelle Informationen zu einem Katalog-Dienst: wie Hinterbliebene im
+// Todesfall vorgehen. Genau ein Eintrag je Dienst; wird der Dienst gelöscht,
+// verschwindet der Eintrag mit ihm.
+// SCOPE-REGEL: allgemeine Anleitungen — niemals nutzerbezogene Daten.
+model CompendiumEntry {
+  id           String         @id @default(cuid())
+  serviceId    String         @unique
+  service      CatalogService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  contactPoint String         @db.Text // Anlaufstelle
+  steps        Json // Schritte als Liste von Texten
+  links        Json // offizielle Links: [{ label, url }]
+  note         String?        @db.Text // Hinweis
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("compendium_entries")
 }
 
 // Fortlaufende Zähler (z. B. Belegnummern). Atomar via increment.

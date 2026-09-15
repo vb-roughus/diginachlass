@@ -259,9 +259,44 @@
 
     <section class="panel" data-panel="admin-compendium" id="admin-compendium">
       <div class="card">
-        <h2>Kompendium</h2>
-        <p class="muted">Hier werden künftig die Informationen zu den einzelnen Diensten gepflegt — Vorgehen im Todesfall, Anlaufstellen und offizielle Links — und mit den Einträgen aus der Dienst-Erfassung verknüpft.</p>
-        <p class="muted" style="margin-top:12px">Noch ohne Inhalt. Die Pflege folgt in einem nächsten Schritt.</p>
+        <div class="card-head">
+          <div>
+            <h2>Kompendium</h2>
+            <p class="muted">Informationen je Dienst: Anlaufstelle, Schritte, offizielle Links und ein Hinweis. Die Einträge sind mit den Diensten aus der Dienst-Erfassung verknüpft.</p>
+          </div>
+        </div>
+
+        <form id="komp-form" class="cat-form" hidden>
+          <h2 style="font-size:1.05rem;margin-bottom:2px">Eintrag bearbeiten</h2>
+          <p class="muted" id="komp-form-service" style="margin-bottom:14px"></p>
+
+          <div class="field">
+            <label for="komp-contact">Anlaufstelle</label>
+            <textarea id="komp-contact" placeholder="Wer ist zuständig und was ist grundsätzlich möglich?"></textarea>
+          </div>
+          <div class="field">
+            <label for="komp-steps">Schritte <span class="muted">— eine Zeile je Schritt</span></label>
+            <textarea id="komp-steps" placeholder="Todesfall melden&#10;Sterbeurkunde einreichen"></textarea>
+          </div>
+          <div class="field">
+            <label for="komp-links">Offizielle Links <span class="muted">— je Zeile: Beschriftung | https://…</span></label>
+            <textarea id="komp-links" placeholder="Offizielles Formular | https://beispiel.ch/formular"></textarea>
+          </div>
+          <div class="field">
+            <label for="komp-note">Hinweis <span class="muted">— optional</span></label>
+            <textarea id="komp-note" placeholder="Besonderheiten, Fristen, Stolpersteine"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary btn-sm" type="submit">Speichern</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="komp-cancel">Abbrechen</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="komp-delete" hidden>Eintrag löschen</button>
+          </div>
+        </form>
+
+        <input type="search" id="komp-search" class="search-input" placeholder="Dienste durchsuchen …" autocomplete="off" aria-label="Dienste durchsuchen">
+
+        <div id="komp-list"></div>
       </div>
     </section>
 
