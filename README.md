@@ -35,9 +35,9 @@ produktionsnahes **Node.js/TypeScript-Backend** mit vollständiger
 | Bereich | Wahl | Begründung |
 |---|---|---|
 | Sprache | **TypeScript** (Node 20+ LTS) | Typensicherheit über das ganze Backend. |
-| Web-Framework | **Express** | Reifes Ökosystem; `helmet`, `express-session`, `connect-pg-simple`, `express-rate-limit` decken die Anforderungen direkt ab. Fastify wäre ebenfalls möglich, brächte hier aber keinen Mehrwert. |
-| DB & Zugriff | **PostgreSQL + Prisma** | Migrationen, Typsicherheit, ausschliesslich parametrisierte Queries (SQL-Injection-Schutz). |
-| Auth | **Eigene Implementierung**, `argon2id`, **serverseitige Sessions** | Volle Kontrolle; keine Tokens/Geheimnisse im `localStorage`. Session-ID nur im httpOnly/secure/sameSite-Cookie; Session-Daten im Postgres-Store. |
+| Web-Framework | **Express** | Reifes Ökosystem; `helmet`, `express-session`, `express-mysql-session`, `express-rate-limit` decken die Anforderungen direkt ab. Fastify wäre ebenfalls möglich, brächte hier aber keinen Mehrwert. |
+| DB & Zugriff | **MariaDB/MySQL + Prisma** | Migrationen, Typsicherheit, ausschliesslich parametrisierte Queries (SQL-Injection-Schutz). |
+| Auth | **Eigene Implementierung**, `argon2id`, **serverseitige Sessions** | Volle Kontrolle; keine Tokens/Geheimnisse im `localStorage`. Session-ID nur im httpOnly/secure/sameSite-Cookie; Session-Daten im MariaDB-Store. |
 | 2FA | **TOTP** (`otplib`) | Authenticator-App; Secret AES-256-GCM-verschlüsselt gespeichert. |
 | E-Mail | `nodemailer` über **SMTP** | Verifizierung, Passwort-Reset, Belege. Ohne SMTP-Konfiguration: Konsolen-Fallback (Entwicklung). |
 | Zahlungen | **Stripe** hinter `PaymentProvider`-Interface | Stripe Billing (Abo) + Checkout (Einmalzahlung), Webhooks mit Signaturprüfung. Austauschbar (z. B. später Payrexx). |
@@ -77,7 +77,7 @@ tests/                     Vitest: auth, entitlement, webhook (+ Setup)
 
 ## Schnellstart (lokal)
 
-Voraussetzungen: **Node 20+**, **PostgreSQL 14+**.
+Voraussetzungen: **Node 20+**, **MariaDB 10.6+** (oder MySQL 8+).
 
 ```bash
 # 1) Abhängigkeiten
@@ -150,7 +150,7 @@ Datenschutzerklärung ausgewiesen.
 ## Datenmodell
 
 Tabellen (siehe `prisma/schema.prisma`): `users`, `email_verifications`,
-`password_resets`, `session` (Postgres-Session-Store), `totp_secrets`,
+`password_resets`, `session` (MariaDB-Session-Store), `totp_secrets`,
 `nachlass_accounts`, `trusted_persons`, `entitlements`, `payments`,
 `security_events`, `counters` (fortlaufende Belegnummern).
 
@@ -209,7 +209,7 @@ erhalten auf geschützten Endpunkten **HTTP 402** mit Upgrade-Hinweis
 
 - **Passwörter:** `argon2id` (OWASP-Parameter). Starke Passwort-Policy mit
   deutschen Fehlermeldungen.
-- **Sessions:** serverseitig (Postgres-Store), httpOnly/secure/sameSite-Cookie,
+- **Sessions:** serverseitig (MariaDB-Store), httpOnly/secure/sameSite-Cookie,
   Session-Regeneration beim Login (Fixation-Schutz).
 - **CSRF:** Synchronizer-Token in der Session; Webhook ausgenommen (Signatur).
 - **Rate-Limiting + Lockout:** API-/Auth-Limiter; temporäre Kontosperre nach 5
@@ -272,15 +272,15 @@ exportieren → Konto löschen.
 > Live-Credentials. Server **und** Datenbank in der **Schweiz** betreiben.
 
 **Variante A — Public Cloud (Managed):**
-1. **Managed PostgreSQL** (Standort CH) bereitstellen; `DATABASE_URL` mit
-   `sslmode=require`. Verschlüsselung at rest aktivieren.
+1. **Managed MariaDB/MySQL** (Standort CH) bereitstellen; bei entferntem
+   DB-Server TLS erzwingen. Verschlüsselung at rest aktivieren.
 2. Node-App als Container/Instanz; `npm ci && npm run build`, Start
    `node dist/server.js`. `NODE_ENV=production`, `TRUST_PROXY=true`.
 3. **TLS** am Reverse-Proxy/Load-Balancer terminieren (Let’s Encrypt). Secure-
    Cookies funktionieren nur über HTTPS.
 
 **Variante B — VPS (Infomaniak):**
-1. Ubuntu-VPS (Rechenzentrum CH), PostgreSQL lokal oder Managed.
+1. Ubuntu-VPS (Rechenzentrum CH), MariaDB lokal oder Managed.
    **Festplattenverschlüsselung** (LUKS) aktivieren → Verschlüsselung at rest.
 2. App via `systemd`-Service (`node dist/server.js`), ENV als
    EnvironmentFile (Rechte `600`).
