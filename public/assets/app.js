@@ -52,12 +52,23 @@
     return (root || document).querySelector(sel);
   }
 
-  function showAlert(el, type, msg) {
+  let alertTimer = null;
+
+  /**
+   * Zeigt eine Meldung an. Erfolgsmeldungen blenden sich nach 5 Sekunden selbst
+   * aus; Fehler bleiben stehen, damit sie nicht übersehen werden. Mit
+   * autoHideMs lässt sich die Dauer überschreiben (0 = stehen lassen).
+   */
+  function showAlert(el, type, msg, autoHideMs) {
     if (!el) return;
     el.className = 'alert show alert-' + type;
     el.textContent = msg;
+    if (alertTimer) { clearTimeout(alertTimer); alertTimer = null; }
+    const ms = autoHideMs === undefined ? (type === 'ok' ? 5000 : 0) : autoHideMs;
+    if (ms > 0) alertTimer = setTimeout(() => { hideAlert(el); alertTimer = null; }, ms);
   }
   function hideAlert(el) {
+    if (alertTimer) { clearTimeout(alertTimer); alertTimer = null; }
     if (el) el.className = 'alert';
   }
 
