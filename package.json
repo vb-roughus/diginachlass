@@ -2,7 +2,7 @@
   "name": "diginachlass",
   "version": "0.1.0",
   "private": true,
-  "description": "diginachlass.ch — KI-gestützte Plattform zur Organisation des digitalen Nachlasses. Backend, Userverwaltung & Zahlungen.",
+  "description": "diginachlass.ch \u2014 KI-gest\u00fctzte Plattform zur Organisation des digitalen Nachlasses. Backend, Userverwaltung & Zahlungen.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=20"
@@ -19,7 +19,8 @@
     "admin:create": "tsx src/scripts/createAdmin.ts",
     "stripe:seed": "tsx src/scripts/createStripePrices.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "catalog:seed": "tsx src/scripts/seedCatalog.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
