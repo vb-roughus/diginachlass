@@ -49,6 +49,29 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>
         <span>Daten &amp; Datenschutz</span>
       </a>
+
+      <!-- Nur für Administratoren; wird per JS eingeblendet. -->
+      <div class="side-admin" id="side-admin" hidden>
+        <div class="side-sep" role="separator"></div>
+        <div class="side-admin-label">Admin-Zone</div>
+        <details class="side-group" open>
+          <summary class="side-group-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>
+            <span>Daten Management</span>
+            <svg class="side-group-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="side-group-body">
+            <a class="side-link" data-panel="admin-services" data-title="Dienst Erfassung" href="#admin-services">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Dienst Erfassung</span>
+            </a>
+            <a class="side-link" data-panel="admin-compendium" data-title="Kompendium" href="#admin-compendium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M8 7.5h7M8 11h7"/></svg>
+              <span>Kompendium</span>
+            </a>
+          </div>
+        </details>
+      </div>
     </nav>
 
     <div class="sidebar-foot">
@@ -186,6 +209,50 @@
         </form>
       </div>
     </section>
+    <!-- ===== Admin-Zone ===== -->
+    <section class="panel" data-panel="admin-services" id="admin-services">
+      <div class="card">
+        <h2>Dienst Erfassung</h2>
+        <p class="muted">Diese Dienste stehen den Nutzenden bei der Erfassung zur Auswahl. Inaktive Einträge werden nicht angeboten, bleiben aber erhalten.</p>
+        <div id="cat-list" style="margin-top:14px"></div>
+        <div class="sep"></div>
+        <h2 style="font-size:1.05rem">Neuen Dienst anlegen</h2>
+        <form id="cat-form" style="margin-top:12px">
+          <div class="row">
+            <div class="field" style="flex:2">
+              <label for="cat-name">Name</label>
+              <input type="text" id="cat-name" placeholder="z. B. Swisscom myCloud" required>
+            </div>
+            <div class="field">
+              <label for="cat-cat">Kategorie</label>
+              <select id="cat-cat">
+                <option value="kommunikation">Kommunikation</option>
+                <option value="social_media">Social Media</option>
+                <option value="finanzen">Finanzen</option>
+                <option value="cloud">Cloud</option>
+                <option value="krypto">Krypto</option>
+                <option value="unterhaltung">Unterhaltung</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cat-sort">Sortierung</label>
+              <input type="text" id="cat-sort" value="0" inputmode="numeric">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit">Dienst anlegen</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="admin-compendium" id="admin-compendium">
+      <div class="card">
+        <h2>Kompendium</h2>
+        <p class="muted">Hier werden künftig die Informationen zu den einzelnen Diensten gepflegt — Vorgehen im Todesfall, Anlaufstellen und offizielle Links — und mit den Einträgen aus der Dienst-Erfassung verknüpft.</p>
+        <p class="muted" style="margin-top:12px">Noch ohne Inhalt. Die Pflege folgt in einem nächsten Schritt.</p>
+      </div>
+    </section>
+
   </main>
 
   <!-- Overlay für die mobile Seitenleiste -->

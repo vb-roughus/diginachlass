@@ -213,6 +213,20 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 .combo-cat{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);flex:0 0 auto}
 .combo-empty{padding:10px;color:var(--ink-soft);font-size:.88rem}
 
+/* Admin-Zone in der Seitenleiste */
+.side-sep{height:1px;background:var(--line);margin:16px 4px 12px}
+.side-admin-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);padding:0 12px;margin-bottom:8px}
+.side-group>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-sm);color:var(--ink);font-weight:600;font-size:.93rem;transition:background .15s}
+.side-group>summary::-webkit-details-marker{display:none}
+.side-group>summary:hover{background:var(--sage)}
+.side-group>summary svg{width:19px;height:19px;flex:0 0 auto;opacity:.9}
+.side-group>summary span{flex:1;min-width:0}
+.side-group>summary svg.side-group-chev{width:15px;height:15px;opacity:.6;transition:transform .25s var(--ease)}
+.side-group[open]>summary svg.side-group-chev{transform:rotate(180deg)}
+.side-group-body{display:flex;flex-direction:column;gap:2px;margin:2px 0 6px 15px;padding-left:10px;border-left:1px solid var(--line)}
+.side-group-body .side-link{font-size:.9rem;font-weight:500;padding:9px 10px}
+.admin-cat-label{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:8px}
+
 /* Dienste nach Kategorie – aufklappbar, im Stil der Landingpage-Kategorien */
 .svc-cats{display:flex;flex-direction:column;gap:12px}
 .svc-cat{border:1px solid var(--line);border-radius:var(--r);background:var(--elev);overflow:hidden;transition:border-color .2s}
