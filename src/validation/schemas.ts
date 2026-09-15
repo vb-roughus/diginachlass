@@ -110,6 +110,13 @@ export const catalogServiceSchema = z.object({
 
 export const catalogServiceUpdateSchema = catalogServiceSchema.partial();
 
+// --- Admin: Rolle ------------------------------------------------------------
+export const adminRoleSchema = z.object({
+  role: z.enum(['user', 'admin'], {
+    errorMap: () => ({ message: 'Rolle muss "user" oder "admin" sein.' }),
+  }),
+});
+
 // --- Kompendium: redaktionelle Infos je Katalog-Dienst ------------------------
 // Allgemeine Anleitungen für Hinterbliebene — niemals nutzerbezogene Daten.
 export const compendiumEntrySchema = z.object({

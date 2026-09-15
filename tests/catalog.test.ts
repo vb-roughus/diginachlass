@@ -265,3 +265,91 @@ describe('Entitlement zurücksetzen (Admin)', () => {
     expect(events).toHaveLength(1);
   });
 });
+
+describe('Benutzerverwaltung (Admin)', () => {
+  it('befördert einen Nutzer zum Administrator und wieder zurück', async () => {
+    const { a, csrf } = await adminAgent('rollen-admin@example.com');
+    const b = agent();
+    await registerVerifyLogin(b, 'kandidat@example.com');
+    const target = await prisma.user.findUniqueOrThrow({ where: { email: 'kandidat@example.com' } });
+    expect(target.role).toBe('user');
+
+    const up = await a
+      .patch('/api/admin/users/' + target.id + '/role')
+      .set('x-csrf-token', csrf)
+      .send({ role: 'admin' });
+    expect(up.status).toBe(200);
+    expect(up.body.user.role).toBe('admin');
+
+    const down = await a
+      .patch('/api/admin/users/' + target.id + '/role')
+      .set('x-csrf-token', csrf)
+      .send({ role: 'user' });
+    expect(down.status).toBe(200);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: target.id } })).role).toBe('user');
+
+    const events = await prisma.securityEvent.findMany({
+      where: { userId: target.id, type: 'role_changed_by_admin' },
+    });
+    expect(events).toHaveLength(2);
+  });
+
+  it('verhindert das Ändern der eigenen Rolle', async () => {
+    const { a, csrf } = await adminAgent('selbst@example.com');
+    const me = await prisma.user.findUniqueOrThrow({ where: { email: 'selbst@example.com' } });
+    const res = await a
+      .patch('/api/admin/users/' + me.id + '/role')
+      .set('x-csrf-token', csrf)
+      .send({ role: 'user' });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('EIGENE_ROLLE');
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: me.id } })).role).toBe('admin');
+  });
+
+  it('lehnt eine unbekannte Rolle ab (400)', async () => {
+    const { a, csrf } = await adminAgent('rollen-admin2@example.com');
+    const b = agent();
+    await registerVerifyLogin(b, 'kandidat2@example.com');
+    const target = await prisma.user.findUniqueOrThrow({ where: { email: 'kandidat2@example.com' } });
+    const res = await a
+      .patch('/api/admin/users/' + target.id + '/role')
+      .set('x-csrf-token', csrf)
+      .send({ role: 'superuser' });
+    expect(res.status).toBe(400);
+  });
+
+  it('gewährt Premium manuell als unbefristete Berechtigung', async () => {
+    const { a, csrf } = await adminAgent('grant-admin@example.com');
+    const b = agent();
+    await registerVerifyLogin(b, 'beschenkt@example.com');
+    const target = await prisma.user.findUniqueOrThrow({ where: { email: 'beschenkt@example.com' } });
+
+    const res = await a
+      .post('/api/admin/users/' + target.id + '/entitlement/grant')
+      .set('x-csrf-token', csrf);
+    expect(res.status).toBe(200);
+
+    const ent = await prisma.entitlement.findUniqueOrThrow({ where: { userId: target.id } });
+    expect(ent.plan).toBe('premium');
+    expect(ent.type).toBe('lifetime');
+    expect(ent.status).toBe('active');
+    expect(ent.validUntil).toBeNull();
+
+    const events = await prisma.securityEvent.findMany({
+      where: { userId: target.id, type: 'entitlement_granted_by_admin' },
+    });
+    expect(events).toHaveLength(1);
+  });
+
+  it('verwehrt normalen Nutzenden beide Aktionen (403)', async () => {
+    const a = agent();
+    const user = await registerVerifyLogin(a, 'normal-aktionen@example.com');
+    const me = await prisma.user.findUniqueOrThrow({ where: { email: 'normal-aktionen@example.com' } });
+
+    const r1 = await a.patch('/api/admin/users/' + me.id + '/role').set('x-csrf-token', user.csrf).send({ role: 'admin' });
+    const r2 = await a.post('/api/admin/users/' + me.id + '/entitlement/grant').set('x-csrf-token', user.csrf);
+    expect(r1.status).toBe(403);
+    expect(r2.status).toBe(403);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: me.id } })).role).toBe('user');
+  });
+});
