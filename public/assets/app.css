@@ -229,7 +229,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 
 /* Bestätigungsdialog (ersetzt das Browser-confirm) */
 .modal-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:modal-fade .15s var(--ease)}
-.modal{width:100%;max-width:460px;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:26px;animation:modal-in .2s var(--ease)}
+.modal{width:100%;max-width:460px;max-height:calc(100vh - 44px);overflow-y:auto;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:26px;animation:modal-in .2s var(--ease)}
+.modal-lg{max-width:640px}
 .modal-title{font-family:var(--font-display);font-weight:600;font-size:1.22rem;color:var(--forest-ink);margin-bottom:10px}
 .modal-text{color:var(--ink-soft);font-size:.95rem;line-height:1.6}
 .modal-text + .modal-text{margin-top:10px}
