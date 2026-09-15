@@ -398,7 +398,9 @@
     if (search) search.addEventListener('input', renderCatalogList);
 
     setupCompendium();
+    setupAdminUsers();
     loadCatalogAdmin();
+    loadAdminUsers();
   }
 
   function closeCatalogForm() {
@@ -669,6 +671,87 @@
       flash('ok', 'Kompendium-Eintrag gelöscht.');
       closeKompForm();
       await loadCatalogAdmin();
+    } catch (err) { flash('error', err.message); }
+  }
+
+  // ---- Admin-Zone: Benutzer --------------------------------------------------
+  let adminUsers = [];
+
+  function setupAdminUsers() {
+    const search = $('#usr-search');
+    if (search) search.addEventListener('input', renderAdminUsers);
+  }
+
+  async function loadAdminUsers() {
+    const el = $('#usr-list');
+    if (!el) return;
+    try {
+      const { users } = await api('/admin/users');
+      adminUsers = users;
+      renderAdminUsers();
+    } catch (err) {
+      el.innerHTML = '<p class="muted">' + escapeHtml(err.message) + '</p>';
+    }
+  }
+
+  function renderAdminUsers() {
+    const el = $('#usr-list');
+    if (!el) return;
+
+    const searchEl = $('#usr-search');
+    const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+    const matches = q
+      ? adminUsers.filter((u) =>
+          (u.email || '').toLowerCase().includes(q) || (u.name || '').toLowerCase().includes(q))
+      : adminUsers;
+
+    if (!matches.length) {
+      el.innerHTML = '<p class="muted">' +
+        (adminUsers.length ? 'Kein Treffer für „' + escapeHtml(q) + '".' : 'Keine Benutzer gefunden.') +
+        '</p>';
+      return;
+    }
+
+    el.innerHTML = matches.map((u) => {
+      const ent = u.entitlement || {};
+      const premium = ent.plan === 'premium';
+      const created = u.createdAt ? new Date(u.createdAt).toLocaleDateString('de-CH') : '—';
+      const meta = [
+        premium ? 'Premium' : 'Kostenlos',
+        ent.type ? String(ent.type) : null,
+        ent.status && ent.status !== 'none' ? 'Status: ' + ent.status : null,
+        u.emailVerifiedAt ? 'verifiziert' : 'unbestätigt',
+        'seit ' + created,
+      ].filter(Boolean).join(' · ');
+
+      return '<div class="item"><div class="top">' +
+        '<span class="name">' + escapeHtml(u.email) +
+          (u.role === 'admin' ? ' <span class="badge premium" style="margin-left:8px">Admin</span>' : '') +
+          (premium ? ' <span class="badge premium" style="margin-left:8px">Premium</span>' : '') +
+        '</span>' +
+        (premium
+          ? '<button class="btn btn-ghost btn-sm" data-reset="' + u.id + '" data-email="' + escapeHtml(u.email) + '">Auf Kostenlos zurücksetzen</button>'
+          : '') +
+      '</div><div class="meta">' + escapeHtml(meta) + '</div></div>';
+    }).join('');
+
+    el.querySelectorAll('[data-reset]').forEach((b) =>
+      b.addEventListener('click', () => resetEntitlement(b.dataset.reset, b.dataset.email)));
+  }
+
+  async function resetEntitlement(userId, email) {
+    if (!confirm('Konto „' + email + '" auf Kostenlos zurücksetzen?\n\nHinweis: Ein in Stripe noch aktives Abo würde bei der nächsten Verlängerung erneut Premium setzen — dort separat kündigen.')) return;
+    try {
+      await api('/admin/users/' + userId + '/entitlement/reset', { method: 'POST' });
+      flash('ok', 'Konto „' + email + '" wurde auf Kostenlos zurückgesetzt.');
+      await loadAdminUsers();
+      // Betrifft es das eigene Konto, die Anzeige oben gleich mitziehen.
+      if (account && account.user && account.user.id === userId) {
+        account = await window.DNL.currentAccount();
+        const badge = $('#plan-badge');
+        if (account && badge) { badge.className = 'badge free'; badge.textContent = 'Kostenlos'; }
+        await loadCompendium();
+      }
     } catch (err) { flash('error', err.message); }
   }
 

@@ -208,3 +208,60 @@ describe('Kompendium', () => {
     expect(names(services.body)).toContain('Dienst bleibt');
   });
 });
+
+describe('Entitlement zurücksetzen (Admin)', () => {
+  it('verwehrt normalen Nutzenden den Zugriff (403)', async () => {
+    const a = agent();
+    const user = await registerVerifyLogin(a, 'normal-reset@example.com');
+    const me = await prisma.user.findUniqueOrThrow({ where: { email: 'normal-reset@example.com' } });
+    const res = await a
+      .post('/api/admin/users/' + me.id + '/entitlement/reset')
+      .set('x-csrf-token', user.csrf);
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('KEIN_ADMIN');
+  });
+
+  it('meldet einen unbekannten Nutzer mit 404', async () => {
+    const { a, csrf } = await adminAgent('reset-admin1@example.com');
+    const res = await a.post('/api/admin/users/gibtesnicht/entitlement/reset').set('x-csrf-token', csrf);
+    expect(res.status).toBe(404);
+  });
+
+  it('stuft ein Premium-Konto auf free zurück und protokolliert das', async () => {
+    const { a, csrf } = await adminAgent('reset-admin2@example.com');
+
+    // Zielkonto anlegen und künstlich auf Premium setzen.
+    const b = agent();
+    await registerVerifyLogin(b, 'premium-kunde@example.com');
+    const target = await prisma.user.findUniqueOrThrow({ where: { email: 'premium-kunde@example.com' } });
+    await prisma.entitlement.update({
+      where: { userId: target.id },
+      data: {
+        plan: 'premium',
+        type: 'subscription',
+        status: 'active',
+        validUntil: new Date(Date.now() + 86400000),
+        cancelAtPeriodEnd: true,
+        stripeSubscriptionId: 'sub_test123',
+      },
+    });
+
+    const res = await a
+      .post('/api/admin/users/' + target.id + '/entitlement/reset')
+      .set('x-csrf-token', csrf);
+    expect(res.status).toBe(200);
+
+    const after = await prisma.entitlement.findUniqueOrThrow({ where: { userId: target.id } });
+    expect(after.plan).toBe('free');
+    expect(after.type).toBeNull();
+    expect(after.status).toBe('none');
+    expect(after.validUntil).toBeNull();
+    expect(after.cancelAtPeriodEnd).toBe(false);
+    expect(after.stripeSubscriptionId).toBeNull();
+
+    const events = await prisma.securityEvent.findMany({
+      where: { userId: target.id, type: 'entitlement_reset_by_admin' },
+    });
+    expect(events).toHaveLength(1);
+  });
+});
