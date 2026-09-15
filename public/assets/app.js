@@ -72,6 +72,65 @@
     if (el) el.className = 'alert';
   }
 
+  /**
+   * Bestätigungsdialog innerhalb der Seite — ersetzt das Browser-confirm().
+   * Liefert ein Promise mit true (bestätigt) oder false (abgebrochen).
+   */
+  function confirmDialog(opts) {
+    const o = opts || {};
+    return new Promise((resolve) => {
+      const previous = document.activeElement;
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+
+      const lines = String(o.message || '')
+        .split('\n')
+        .filter((l) => l.trim() !== '')
+        .map((l) => '<p class="modal-text">' + escapeHtml(l) + '</p>')
+        .join('');
+
+      overlay.innerHTML =
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="dnl-modal-title">' +
+          '<h3 class="modal-title" id="dnl-modal-title">' + escapeHtml(o.title || 'Bitte bestätigen') + '</h3>' +
+          lines +
+          '<div class="modal-actions">' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-act="cancel">' +
+              escapeHtml(o.cancelLabel || 'Abbrechen') + '</button>' +
+            '<button type="button" class="btn ' + (o.danger ? 'btn-clay' : 'btn-primary') + ' btn-sm" data-act="ok">' +
+              escapeHtml(o.confirmLabel || 'Bestätigen') + '</button>' +
+          '</div>' +
+        '</div>';
+
+      const cancelBtn = overlay.querySelector('[data-act=cancel]');
+      const okBtn = overlay.querySelector('[data-act=ok]');
+
+      function close(result) {
+        document.removeEventListener('keydown', onKey, true);
+        overlay.remove();
+        if (previous && previous.focus) previous.focus();
+        resolve(result);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(false); }
+        else if (e.key === 'Tab') {
+          // Fokus im Dialog halten.
+          e.preventDefault();
+          (document.activeElement === okBtn ? cancelBtn : okBtn).focus();
+        }
+      }
+
+      cancelBtn.addEventListener('click', () => close(false));
+      okBtn.addEventListener('click', () => close(true));
+      // Nur ein Klick auf die Fläche daneben schliesst, nicht einer im Dialog.
+      overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) close(false); });
+      document.addEventListener('keydown', onKey, true);
+
+      document.body.appendChild(overlay);
+      // Bei heiklen Aktionen bewusst "Abbrechen" vorbelegen.
+      (o.danger ? cancelBtn : okBtn).focus();
+    });
+  }
+
   function fieldErrors(err) {
     if (!err.fields) return err.message;
     return err.fields.map((f) => f.message).join(' ');
@@ -91,7 +150,7 @@
     }
   }
 
-  window.DNL = { api, fetchCsrf, $, showAlert, hideAlert, fieldErrors, escapeHtml, currentAccount };
+  window.DNL = { api, fetchCsrf, $, showAlert, hideAlert, fieldErrors, escapeHtml, currentAccount, confirmDialog };
 
   // --- Konto-Dashboard: Panel-Navigation (nur bei vorhandener .app-shell) ---
   function initShell() {

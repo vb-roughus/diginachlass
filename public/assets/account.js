@@ -1,6 +1,6 @@
 /* Logik der Konto-Seite. */
 (function () {
-  const { api, $, showAlert, escapeHtml } = window.DNL;
+  const { api, $, showAlert, escapeHtml, confirmDialog } = window.DNL;
   const alert = $('#alert');
   let account = null;
 
@@ -203,7 +203,13 @@
   }
 
   async function delAccount(id) {
-    if (!confirm('Diesen Dienst löschen?')) return;
+    const ok = await confirmDialog({
+      title: 'Dienst löschen?',
+      message: 'Der Eintrag wird aus Ihrem Compendium entfernt.',
+      confirmLabel: 'Löschen',
+      danger: true,
+    });
+    if (!ok) return;
     try { await api('/accounts/' + id, { method: 'DELETE' }); await loadAccounts(); await loadCompendium(); }
     catch (err) { flash('error', err.message); }
   }
@@ -244,7 +250,13 @@
       el.innerHTML = html;
       el.querySelectorAll('[data-tdel]').forEach((b) =>
         b.addEventListener('click', async () => {
-          if (!confirm('Vertrauensperson löschen?')) return;
+          const ok = await confirmDialog({
+            title: 'Vertrauensperson löschen?',
+            message: 'Die Person wird aus Ihrer Liste entfernt.',
+            confirmLabel: 'Löschen',
+            danger: true,
+          });
+          if (!ok) return;
           try { await api('/trusted-persons/' + b.dataset.tdel, { method: 'DELETE' }); await loadTrusted(); }
           catch (err) { flash('error', err.message); }
         }));
@@ -292,7 +304,13 @@
     catch (err) { flash('error', err.message); }
   });
   $('#cancel-btn').addEventListener('click', async () => {
-    if (!confirm('Abo zum Ende der Laufzeit kündigen?')) return;
+    const ok = await confirmDialog({
+      title: 'Abo kündigen?',
+      message: 'Das Abonnement wird zum Ende der laufenden Periode gekündigt. Bis dahin bleibt Premium aktiv.',
+      confirmLabel: 'Kündigen',
+      danger: true,
+    });
+    if (!ok) return;
     try { const res = await api('/billing/cancel', { method: 'POST' }); flash('ok', res.message); account = await window.DNL.currentAccount(); renderBilling(); }
     catch (err) { flash('error', err.message); }
   });
@@ -360,7 +378,13 @@
   // ---- Konto löschen -------------------------------------------------------
   $('#delete-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!confirm('Konto und alle Daten wirklich endgültig löschen?')) return;
+    const ok = await confirmDialog({
+      title: 'Konto endgültig löschen?',
+      message: 'Ihr Konto und sämtliche erfassten Daten werden unwiderruflich gelöscht.\nDieser Schritt lässt sich nicht rückgängig machen.',
+      confirmLabel: 'Endgültig löschen',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api('/account', { method: 'DELETE', body: { password: $('#del-pw').value, confirm: $('#del-confirm').value } });
       location.href = '/?deleted=1';
@@ -516,7 +540,13 @@
   }
 
   async function deleteCatalogService(id) {
-    if (!confirm('Diesen Dienst aus dem Katalog entfernen? Bereits erfasste Nutzer-Dienste bleiben erhalten.')) return;
+    const ok = await confirmDialog({
+      title: 'Dienst aus dem Katalog entfernen?',
+      message: 'Der Dienst steht Nutzenden nicht mehr zur Auswahl.\nBereits erfasste Nutzer-Dienste bleiben erhalten.',
+      confirmLabel: 'Entfernen',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api('/admin/services/' + id, { method: 'DELETE' });
       flash('ok', 'Dienst aus dem Katalog entfernt.');
@@ -665,7 +695,13 @@
 
   async function deleteCompendiumEntry() {
     if (!kompEditing) return;
-    if (!confirm('Eintrag für „' + kompEditing.name + '" löschen? Der Dienst selbst bleibt erhalten.')) return;
+    const ok = await confirmDialog({
+      title: 'Kompendium-Eintrag löschen?',
+      message: 'Die Informationen zu „' + kompEditing.name + '" werden entfernt.\nDer Dienst selbst bleibt erhalten.',
+      confirmLabel: 'Löschen',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api('/admin/compendium/' + kompEditing.id, { method: 'DELETE' });
       flash('ok', 'Kompendium-Eintrag gelöscht.');
@@ -740,7 +776,13 @@
   }
 
   async function resetEntitlement(userId, email) {
-    if (!confirm('Konto „' + email + '" auf Kostenlos zurücksetzen?\n\nHinweis: Ein in Stripe noch aktives Abo würde bei der nächsten Verlängerung erneut Premium setzen — dort separat kündigen.')) return;
+    const ok = await confirmDialog({
+      title: 'Auf Kostenlos zurücksetzen?',
+      message: 'Das Konto „' + email + '" verliert Premium.\nHinweis: Ein in Stripe noch aktives Abo würde bei der nächsten Verlängerung erneut Premium setzen — dort separat kündigen.',
+      confirmLabel: 'Zurücksetzen',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api('/admin/users/' + userId + '/entitlement/reset', { method: 'POST' });
       flash('ok', 'Konto „' + email + '" wurde auf Kostenlos zurückgesetzt.');
