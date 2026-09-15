@@ -17,8 +17,16 @@ const TABLES = [
 ];
 
 async function truncateAll(): Promise<void> {
-  const list = TABLES.map((t) => `"${t}"`).join(', ');
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE;`);
+  // MySQL/MariaDB: TRUNCATE nur einzeln und bei deaktivierten FK-Checks,
+  // da die Tabellen über Fremdschlüssel verbunden sind.
+  await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0;');
+  try {
+    for (const table of TABLES) {
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE \`${table}\`;`);
+    }
+  } finally {
+    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');
+  }
 }
 
 beforeEach(async () => {

@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 
 const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres@127.0.0.1:5433/diginachlass_test';
+  process.env.TEST_DATABASE_URL ?? 'mysql://dnl:dnl@127.0.0.1:3306/diginachlass_test';
 
 /**
  * Einmaliges Setup: Migrationen auf die Test-DB anwenden.

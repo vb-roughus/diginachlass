@@ -11,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -91,7 +91,7 @@ enum PaymentStatus {
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
-  passwordHash    String
+  passwordHash    String    @db.VarChar(255)
   name            String?
   role            Role      @default(user)
   emailVerifiedAt DateTime?
@@ -149,7 +149,7 @@ model TotpSecret {
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   // AES-256-GCM-verschlüsseltes TOTP-Shared-Secret (siehe lib/crypto.ts).
-  secretEnc   String
+  secretEnc   String    @db.VarChar(255)
   confirmedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -157,14 +157,15 @@ model TotpSecret {
   @@map("totp_secrets")
 }
 
-// connect-pg-simple Session-Store. Schema wird hier von Prisma verwaltet
-// (createTableIfMissing:false im Store), Spaltennamen müssen exakt passen.
+// express-mysql-session Session-Store. Schema wird hier von Prisma verwaltet
+// (createDatabaseTable:false im Store), Spaltennamen müssen exakt passen.
+// Hinweis: session_id erhält per Migration die Kollation utf8mb4_bin, damit
+// Session-IDs case-sensitiv verglichen werden (wie vom Store vorgesehen).
 model Session {
-  sid    String   @id @db.VarChar
-  sess   Json     @db.Json
-  expire DateTime @db.Timestamp(6)
+  sessionId String  @id @map("session_id") @db.VarChar(128)
+  expires   Int     @db.UnsignedInt
+  data      String? @db.MediumText
 
-  @@index([expire], map: "IDX_session_expire")
   @@map("session")
 }
 
@@ -181,7 +182,7 @@ model NachlassAccount {
   category         NachlassCategory
   relevance        Relevance        @default(mittel)
   accessDocumented AccessDocumented @default(nein)
-  notes            String? // Metadaten/Hinweise — NIEMALS Zugangsdaten
+  notes            String?          @db.Text // Metadaten/Hinweise — NIEMALS Zugangsdaten
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -254,7 +255,7 @@ model Payment {
 
   // Fortlaufende Belegnummer (siehe lib/receipts.ts)
   receiptNumber String?  @unique
-  description   String?
+  description   String?  @db.Text
 
   createdAt DateTime @default(now())
 
@@ -269,7 +270,7 @@ model SecurityEvent {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   type      String
   ip        String?
-  userAgent String?
+  userAgent String?  @db.Text
   meta      Json?
   createdAt DateTime @default(now())
 
