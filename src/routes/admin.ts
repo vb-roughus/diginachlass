@@ -3,6 +3,8 @@ import { asyncHandler, AppError } from '../middleware/error';
 import { validateBody } from '../middleware/validate';
 import { requireAdmin } from '../middleware/auth';
 import { prisma } from '../db/prisma';
+import { recordSecurityEvent } from '../lib/logger';
+import { ensureEntitlement } from '../services/entitlement';
 import {
   catalogServiceSchema,
   catalogServiceUpdateSchema,
@@ -180,5 +182,42 @@ adminRouter.delete(
     if (!existing) throw new AppError(404, 'Für diesen Dienst ist kein Eintrag erfasst.');
     await prisma.compendiumEntry.delete({ where: { serviceId: req.params.serviceId } });
     res.status(204).end();
+  }),
+);
+
+// --- Entitlement zurücksetzen ------------------------------------------------
+// Für Support- und Testfälle: setzt ein Konto auf "free" zurück. Der Stripe-
+// Kunde bleibt erhalten, damit spätere Käufe demselben Kunden zugeordnet werden.
+adminRouter.post(
+  '/users/:id/entitlement/reset',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new AppError(404, 'Nutzer nicht gefunden.');
+
+    await ensureEntitlement(user.id);
+    const entitlement = await prisma.entitlement.update({
+      where: { userId: user.id },
+      data: {
+        plan: 'free',
+        type: null,
+        status: 'none',
+        validUntil: null,
+        cancelAtPeriodEnd: false,
+        stripeSubscriptionId: null,
+        stripePaymentIntentId: null,
+      },
+    });
+
+    await recordSecurityEvent({
+      type: 'entitlement_reset_by_admin',
+      userId: user.id,
+      req,
+      meta: { by: req.user!.id, email: user.email },
+    });
+
+    res.json({ entitlement });
   }),
 );
