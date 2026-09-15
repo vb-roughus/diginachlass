@@ -23,23 +23,29 @@
   };
   const CHEVRON = '<svg class="svc-cat-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 
-  // Kuratierte Liste gängiger Dienste je Kategorie (inkl. typischer Schweizer
-  // Anbieter). Dient als durchsuchbare Auswahl; nicht gelistete Dienste werden
-  // einfach als eigener Name eingegeben.
-  const SERVICE_CATALOG = [
-    { category: 'kommunikation', services: ['Gmail', 'Outlook / Hotmail', 'GMX', 'Bluewin', 'Proton Mail', 'Sunrise', 'Salt', 'WhatsApp', 'Threema', 'Telegram', 'Signal'] },
-    { category: 'social_media', services: ['Facebook', 'Instagram', 'X (Twitter)', 'LinkedIn', 'TikTok', 'Snapchat', 'Pinterest', 'Reddit'] },
-    { category: 'finanzen', services: ['PayPal', 'TWINT', 'PostFinance', 'UBS', 'Raiffeisen', 'Kantonalbank (ZKB)', 'Migros Bank', 'Yuh', 'Swissquote', 'Viseca (Kreditkarte)', 'Revolut', 'Wise', 'Neon'] },
-    { category: 'cloud', services: ['Google Drive', 'iCloud', 'Dropbox', 'OneDrive', 'pCloud', 'Proton Drive', 'Infomaniak kDrive'] },
-    { category: 'krypto', services: ['Bitcoin-Wallet', 'Coinbase', 'Binance', 'Kraken', 'Ledger', 'MetaMask'] },
-    { category: 'unterhaltung', services: ['Netflix', 'Spotify', 'Disney+', 'Amazon Prime', 'YouTube', 'Blue TV', 'Zattoo', 'Steam', 'Apple Music', 'PlayStation Network', 'Twitch'] },
-    { category: 'sonstiges', services: ['Amazon', 'Apple ID', 'Microsoft-Konto', 'Google-Konto', 'SwissID', 'SBB (SwissPass)', 'Cumulus (Migros)', 'Supercard (Coop)', 'Ricardo', 'Galaxus', 'eBay'] },
-  ];
   let addedNames = new Set();
 
-  // Flache, durchsuchbare Liste (Name + Kategorie-Label).
-  const COMBO_ITEMS = SERVICE_CATALOG.flatMap((g) =>
-    g.services.map((name) => ({ name: name, category: g.category, label: CAT_LABELS[g.category] })));
+  // Durchsuchbare Auswahlliste — wird vom Server geladen und vom Administrator
+  // unter "Dienst Erfassung" gepflegt. Nicht gelistete Dienste geben Nutzende
+  // weiterhin einfach als eigenen Namen ein.
+  let COMBO_ITEMS = [];
+
+  async function loadServiceCatalog() {
+    try {
+      const { items } = await api('/services');
+      COMBO_ITEMS = items.map((i) => ({
+        name: i.name,
+        category: i.category,
+        label: CAT_LABELS[i.category] || i.category,
+      }));
+    } catch (err) {
+      // Ohne Katalog bleibt die freie Eingabe funktionsfähig. Den Grund aber
+      // sichtbar machen — eine leere Liste sieht sonst aus wie ein leerer Katalog.
+      COMBO_ITEMS = [];
+      // eslint-disable-next-line no-console
+      console.warn('Dienst-Auswahl konnte nicht geladen werden:', err.message);
+    }
+  }
 
   // ---- Durchsuchbare Dienst-Auswahl (Combobox) -----------------------------
   function initCombo() {
@@ -123,7 +129,8 @@
     renderBilling();
     render2fa();
     initCombo();
-    await Promise.all([loadCompendium(), loadAccounts(), loadTrusted()]);
+    setupAdmin();
+    await Promise.all([loadServiceCatalog(), loadCompendium(), loadAccounts(), loadTrusted()]);
   }
 
   // ---- Compendium ----------------------------------------------------------
@@ -359,6 +366,86 @@
       location.href = '/?deleted=1';
     } catch (err) { flash('error', window.DNL.fieldErrors(err)); }
   });
+
+  // ---- Admin-Zone: Dienst-Katalog -------------------------------------------
+  function setupAdmin() {
+    if (!account || !account.user || account.user.role !== 'admin') return;
+    const box = $('#side-admin');
+    if (box) box.hidden = false;
+    const form = $('#cat-form');
+    if (form) form.addEventListener('submit', createCatalogService);
+    loadCatalogAdmin();
+  }
+
+  async function loadCatalogAdmin() {
+    const el = $('#cat-list');
+    if (!el) return;
+    try {
+      const { items } = await api('/admin/services');
+      if (!items.length) {
+        el.innerHTML = '<p class="muted">Noch keine Dienste im Katalog. Legen Sie unten den ersten an.</p>';
+        return;
+      }
+      const byCat = {};
+      for (const i of items) (byCat[i.category] = byCat[i.category] || []).push(i);
+
+      el.innerHTML = CAT_ORDER.filter((c) => byCat[c]).map((c) =>
+        '<div style="margin-bottom:16px"><div class="admin-cat-label">' +
+          escapeHtml(CAT_LABELS[c] || c) + ' · ' + byCat[c].length + '</div>' +
+        byCat[c].map((i) =>
+          '<div class="item"><div class="top">' +
+            '<span class="name">' + escapeHtml(i.name) +
+              (i.active ? '' : ' <span class="badge free" style="margin-left:8px">inaktiv</span>') +
+            '</span>' +
+            '<span style="display:flex;gap:8px;flex:0 0 auto">' +
+              '<button class="btn btn-ghost btn-sm" data-toggle="' + i.id + '" data-active="' + (i.active ? '1' : '0') + '">' +
+                (i.active ? 'Deaktivieren' : 'Aktivieren') + '</button>' +
+              '<button class="btn btn-ghost btn-sm" data-delcat="' + i.id + '">Löschen</button>' +
+            '</span>' +
+          '</div></div>'
+        ).join('') + '</div>'
+      ).join('');
+
+      el.querySelectorAll('[data-delcat]').forEach((b) =>
+        b.addEventListener('click', () => deleteCatalogService(b.dataset.delcat)));
+      el.querySelectorAll('[data-toggle]').forEach((b) =>
+        b.addEventListener('click', () => toggleCatalogService(b.dataset.toggle, b.dataset.active !== '1')));
+    } catch (err) {
+      el.innerHTML = '<p class="muted">' + escapeHtml(err.message) + '</p>';
+    }
+  }
+
+  async function createCatalogService(e) {
+    e.preventDefault();
+    const body = {
+      name: $('#cat-name').value.trim(),
+      category: $('#cat-cat').value,
+      sortOrder: Number($('#cat-sort').value || 0),
+    };
+    try {
+      await api('/admin/services', { method: 'POST', body });
+      $('#cat-form').reset();
+      $('#cat-sort').value = '0';
+      flash('ok', 'Dienst wurde zum Katalog hinzugefügt.');
+      await Promise.all([loadCatalogAdmin(), loadServiceCatalog()]);
+    } catch (err) { flash('error', window.DNL.fieldErrors(err)); }
+  }
+
+  async function toggleCatalogService(id, active) {
+    try {
+      await api('/admin/services/' + id, { method: 'PATCH', body: { active } });
+      await Promise.all([loadCatalogAdmin(), loadServiceCatalog()]);
+    } catch (err) { flash('error', err.message); }
+  }
+
+  async function deleteCatalogService(id) {
+    if (!confirm('Diesen Dienst aus dem Katalog entfernen? Bereits erfasste Nutzer-Dienste bleiben erhalten.')) return;
+    try {
+      await api('/admin/services/' + id, { method: 'DELETE' });
+      flash('ok', 'Dienst aus dem Katalog entfernt.');
+      await Promise.all([loadCatalogAdmin(), loadServiceCatalog()]);
+    } catch (err) { flash('error', err.message); }
+  }
 
   // ---- Logout --------------------------------------------------------------
   $('#logout').addEventListener('click', async (e) => {
