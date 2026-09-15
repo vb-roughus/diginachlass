@@ -802,19 +802,36 @@
         'seit ' + created,
       ].filter(Boolean).join(' · ');
 
+      const self = account && account.user && account.user.id === u.id;
+      const email = escapeHtml(u.email);
+      const actions = [
+        // Die eigene Rolle lässt sich bewusst nicht ändern.
+        self
+          ? ''
+          : '<button class="btn btn-ghost btn-sm" data-role="' + u.id + '" data-email="' + email + '" data-to="' +
+            (u.role === 'admin' ? 'user' : 'admin') + '">' +
+            (u.role === 'admin' ? 'Adminrechte entziehen' : 'Zum Admin machen') + '</button>',
+        premium
+          ? '<button class="btn btn-ghost btn-sm" data-reset="' + u.id + '" data-email="' + email + '">Auf Kostenlos</button>'
+          : '<button class="btn btn-ghost btn-sm" data-grant="' + u.id + '" data-email="' + email + '">Premium geben</button>',
+      ].filter(Boolean).join('');
+
       return '<div class="item"><div class="top">' +
-        '<span class="name">' + escapeHtml(u.email) +
+        '<span class="name">' + email +
           (u.role === 'admin' ? ' <span class="badge premium" style="margin-left:8px">Admin</span>' : '') +
           (premium ? ' <span class="badge premium" style="margin-left:8px">Premium</span>' : '') +
+          (self ? ' <span class="badge free" style="margin-left:8px">Sie</span>' : '') +
         '</span>' +
-        (premium
-          ? '<button class="btn btn-ghost btn-sm" data-reset="' + u.id + '" data-email="' + escapeHtml(u.email) + '">Auf Kostenlos zurücksetzen</button>'
-          : '') +
+        '<span class="item-actions">' + actions + '</span>' +
       '</div><div class="meta">' + escapeHtml(meta) + '</div></div>';
     }).join('');
 
     el.querySelectorAll('[data-reset]').forEach((b) =>
       b.addEventListener('click', () => resetEntitlement(b.dataset.reset, b.dataset.email)));
+    el.querySelectorAll('[data-grant]').forEach((b) =>
+      b.addEventListener('click', () => grantPremium(b.dataset.grant, b.dataset.email)));
+    el.querySelectorAll('[data-role]').forEach((b) =>
+      b.addEventListener('click', () => changeRole(b.dataset.role, b.dataset.email, b.dataset.to)));
   }
 
   async function resetEntitlement(userId, email) {
@@ -828,15 +845,57 @@
     try {
       await api('/admin/users/' + userId + '/entitlement/reset', { method: 'POST' });
       flash('ok', 'Konto „' + email + '" wurde auf Kostenlos zurückgesetzt.');
-      await loadAdminUsers();
-      // Betrifft es das eigene Konto, die Anzeige oben gleich mitziehen.
-      if (account && account.user && account.user.id === userId) {
-        account = await window.DNL.currentAccount();
-        const badge = $('#plan-badge');
-        if (account && badge) { badge.className = 'badge free'; badge.textContent = 'Kostenlos'; }
-        await loadCompendium();
-      }
+      await refreshAfterUserChange(userId);
     } catch (err) { flash('error', err.message); }
+  }
+
+  async function grantPremium(userId, email) {
+    const ok = await confirmDialog({
+      title: 'Premium gewähren?',
+      message: 'Das Konto „' + email + '" erhält unbefristet Premium.\nDie Freischaltung erfolgt ohne Stripe-Vorgang und wird als unbefristete Einmalberechtigung geführt.',
+      confirmLabel: 'Premium geben',
+    });
+    if (!ok) return;
+    try {
+      await api('/admin/users/' + userId + '/entitlement/grant', { method: 'POST' });
+      flash('ok', 'Konto „' + email + '" wurde auf Premium gesetzt.');
+      await refreshAfterUserChange(userId);
+    } catch (err) { flash('error', err.message); }
+  }
+
+  async function changeRole(userId, email, to) {
+    const toAdmin = to === 'admin';
+    const ok = await confirmDialog({
+      title: toAdmin ? 'Zum Administrator machen?' : 'Adminrechte entziehen?',
+      message: toAdmin
+        ? 'Das Konto „' + email + '" erhält vollen Zugriff auf die Admin-Zone — inklusive Benutzerverwaltung.'
+        : 'Das Konto „' + email + '" verliert den Zugriff auf die Admin-Zone.',
+      confirmLabel: toAdmin ? 'Zum Admin machen' : 'Rechte entziehen',
+      danger: !toAdmin,
+    });
+    if (!ok) return;
+    try {
+      await api('/admin/users/' + userId + '/role', { method: 'PATCH', body: { role: to } });
+      flash('ok', toAdmin
+        ? 'Konto „' + email + '" ist jetzt Administrator.'
+        : 'Konto „' + email + '" ist jetzt ein normales Konto.');
+      await loadAdminUsers();
+    } catch (err) { flash('error', err.message); }
+  }
+
+  /** Nach einer Änderung die Liste und — falls betroffen — die eigene Anzeige nachziehen. */
+  async function refreshAfterUserChange(userId) {
+    await loadAdminUsers();
+    if (account && account.user && account.user.id === userId) {
+      account = await window.DNL.currentAccount();
+      const badge = $('#plan-badge');
+      if (account && badge) {
+        const p = account.entitlement.premium;
+        badge.className = 'badge ' + (p ? 'premium' : 'free');
+        badge.textContent = p ? 'Premium' : 'Kostenlos';
+      }
+      await loadCompendium();
+    }
   }
 
   // ---- Logout --------------------------------------------------------------

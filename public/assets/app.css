@@ -227,6 +227,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 .form-actions{display:flex;gap:10px;flex-wrap:wrap}
 .search-input{width:100%;margin:18px 0 12px}
 
+.item-actions{display:flex;gap:8px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
+
 /* Bestätigungsdialog (ersetzt das Browser-confirm) */
 .modal-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:modal-fade .15s var(--ease)}
 .modal{width:100%;max-width:460px;max-height:calc(100vh - 44px);overflow-y:auto;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:26px;animation:modal-in .2s var(--ease)}

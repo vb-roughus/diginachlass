@@ -9,6 +9,7 @@ import {
   catalogServiceSchema,
   catalogServiceUpdateSchema,
   compendiumEntrySchema,
+  adminRoleSchema,
 } from '../validation/schemas';
 
 /**
@@ -213,6 +214,76 @@ adminRouter.post(
 
     await recordSecurityEvent({
       type: 'entitlement_reset_by_admin',
+      userId: user.id,
+      req,
+      meta: { by: req.user!.id, email: user.email },
+    });
+
+    res.json({ entitlement });
+  }),
+);
+
+// --- Rolle ändern -----------------------------------------------------------
+adminRouter.patch(
+  '/users/:id/role',
+  validateBody(adminRoleSchema),
+  asyncHandler(async (req, res) => {
+    // Sich selbst die Rechte zu entziehen wäre nicht rückgängig zu machen,
+    // solange es keinen zweiten Administrator gibt.
+    if (req.params.id === req.user!.id) {
+      throw new AppError(400, 'Sie können Ihre eigene Rolle nicht ändern.', {
+        code: 'EIGENE_ROLLE',
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, email: true, role: true },
+    });
+    if (!user) throw new AppError(404, 'Nutzer nicht gefunden.');
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: req.body.role },
+      select: { id: true, email: true, role: true },
+    });
+
+    await recordSecurityEvent({
+      type: 'role_changed_by_admin',
+      userId: user.id,
+      req,
+      meta: { by: req.user!.id, from: user.role, to: req.body.role },
+    });
+
+    res.json({ user: updated });
+  }),
+);
+
+// --- Premium manuell gewähren ------------------------------------------------
+// Ohne Stripe-Vorgang, daher als unbefristete Einmalberechtigung (lifetime).
+adminRouter.post(
+  '/users/:id/entitlement/grant',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new AppError(404, 'Nutzer nicht gefunden.');
+
+    await ensureEntitlement(user.id);
+    const entitlement = await prisma.entitlement.update({
+      where: { userId: user.id },
+      data: {
+        plan: 'premium',
+        type: 'lifetime',
+        status: 'active',
+        validUntil: null,
+        cancelAtPeriodEnd: false,
+      },
+    });
+
+    await recordSecurityEvent({
+      type: 'entitlement_granted_by_admin',
       userId: user.id,
       req,
       meta: { by: req.user!.id, email: user.email },
