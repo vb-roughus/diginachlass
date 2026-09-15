@@ -110,6 +110,27 @@ export const catalogServiceSchema = z.object({
 
 export const catalogServiceUpdateSchema = catalogServiceSchema.partial();
 
+// --- Kompendium: redaktionelle Infos je Katalog-Dienst ------------------------
+// Allgemeine Anleitungen für Hinterbliebene — niemals nutzerbezogene Daten.
+export const compendiumEntrySchema = z.object({
+  contactPoint: z
+    .string()
+    .trim()
+    .min(1, 'Bitte die Anlaufstelle angeben.')
+    .max(2000),
+  steps: z.array(z.string().trim().min(1).max(500)).max(20).default([]),
+  links: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1, 'Bitte eine Beschriftung angeben.').max(160),
+        url: z.string().trim().url('Bitte eine gültige URL angeben (inkl. https://).').max(500),
+      }),
+    )
+    .max(10)
+    .default([]),
+  note: z.string().trim().max(2000).nullish(),
+});
+
 export const trustedPersonSchema = z.object({
   name: z.string().trim().min(1, 'Bitte den Namen angeben.').max(120),
   relationship: z.string().trim().min(1, 'Bitte die Beziehung angeben.').max(120),

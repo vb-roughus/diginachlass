@@ -397,6 +397,7 @@
     const search = $('#cat-search');
     if (search) search.addEventListener('input', renderCatalogList);
 
+    setupCompendium();
     loadCatalogAdmin();
   }
 
@@ -417,6 +418,7 @@
       const { items } = await api('/admin/services');
       catalogItems = items;
       renderCatalogList();
+      renderCompendiumList();
     } catch (err) {
       el.innerHTML = '<p class="muted">' + escapeHtml(err.message) + '</p>';
     }
@@ -517,6 +519,156 @@
       await api('/admin/services/' + id, { method: 'DELETE' });
       flash('ok', 'Dienst aus dem Katalog entfernt.');
       await Promise.all([loadCatalogAdmin(), loadServiceCatalog()]);
+    } catch (err) { flash('error', err.message); }
+  }
+
+  // ---- Admin-Zone: Kompendium ------------------------------------------------
+  const kompOpen = new Set();
+  let kompEditing = null; // { id, name }
+
+  function setupCompendium() {
+    const form = $('#komp-form');
+    if (form) form.addEventListener('submit', saveCompendiumEntry);
+    const cancel = $('#komp-cancel');
+    if (cancel) cancel.addEventListener('click', closeKompForm);
+    const del = $('#komp-delete');
+    if (del) del.addEventListener('click', deleteCompendiumEntry);
+    const search = $('#komp-search');
+    if (search) search.addEventListener('input', renderCompendiumList);
+  }
+
+  function closeKompForm() {
+    kompEditing = null;
+    const form = $('#komp-form');
+    if (form) { form.reset(); form.hidden = true; }
+    const del = $('#komp-delete');
+    if (del) del.hidden = true;
+  }
+
+  function renderCompendiumList() {
+    const el = $('#komp-list');
+    if (!el) return;
+
+    if (!catalogItems.length) {
+      el.innerHTML = '<p class="muted">Noch keine Dienste im Katalog. Legen Sie zuerst unter „Dienst Erfassung" Dienste an.</p>';
+      return;
+    }
+
+    const searchEl = $('#komp-search');
+    const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+    const matches = q
+      ? catalogItems.filter((i) =>
+          i.name.toLowerCase().includes(q) || (CAT_LABELS[i.category] || '').toLowerCase().includes(q))
+      : catalogItems;
+
+    if (!matches.length) {
+      el.innerHTML = '<p class="muted">Kein Treffer für „' + escapeHtml(q) + '".</p>';
+      return;
+    }
+
+    const byCat = {};
+    for (const i of matches) (byCat[i.category] = byCat[i.category] || []).push(i);
+
+    el.innerHTML = '<div class="svc-cats">' + CAT_ORDER.filter((c) => byCat[c]).map((c) => {
+      const open = q ? true : kompOpen.has(c);
+      const gepflegt = byCat[c].filter((i) => i.compendium).length;
+      return '<details class="svc-cat" data-cat="' + c + '"' + (open ? ' open' : '') + '>' +
+        '<summary class="svc-cat-head"><span class="cat-ico">' + (CAT_ICONS[c] || '') + '</span>' +
+        '<span class="svc-cat-title">' + escapeHtml(CAT_LABELS[c] || c) + '</span>' +
+        '<span class="svc-cat-count">' + gepflegt + '/' + byCat[c].length + '</span>' + CHEVRON + '</summary>' +
+        '<div class="svc-cat-body">' + byCat[c].map((i) =>
+          '<div class="item"><div class="top">' +
+            '<span class="name">' + escapeHtml(i.name) +
+              (i.compendium
+                ? ' <span class="badge premium" style="margin-left:8px">gepflegt</span>'
+                : ' <span class="badge free" style="margin-left:8px">offen</span>') +
+            '</span>' +
+            '<button class="btn btn-ghost btn-sm" data-komp="' + i.id + '" data-name="' + escapeHtml(i.name) + '">' +
+              (i.compendium ? 'Bearbeiten' : 'Erfassen') + '</button>' +
+          '</div></div>').join('') + '</div></details>';
+    }).join('') + '</div>';
+
+    el.querySelectorAll('details.svc-cat').forEach((d) =>
+      d.addEventListener('toggle', () => {
+        const active = $('#komp-search') && $('#komp-search').value.trim();
+        if (active) return;
+        if (d.open) kompOpen.add(d.dataset.cat); else kompOpen.delete(d.dataset.cat);
+      }));
+    el.querySelectorAll('[data-komp]').forEach((b) =>
+      b.addEventListener('click', () => openCompendiumEntry(b.dataset.komp, b.dataset.name)));
+  }
+
+  async function openCompendiumEntry(serviceId, name) {
+    kompEditing = { id: serviceId, name: name };
+    $('#komp-form-service').textContent = 'Dienst: ' + name;
+
+    let entry = null;
+    try {
+      const res = await api('/admin/compendium/' + serviceId);
+      entry = res.item;
+    } catch (err) {
+      if (err.status !== 404) { flash('error', err.message); return; }
+    }
+
+    $('#komp-contact').value = entry ? entry.contactPoint : '';
+    $('#komp-steps').value = entry && Array.isArray(entry.steps) ? entry.steps.join('\n') : '';
+    $('#komp-links').value = entry && Array.isArray(entry.links)
+      ? entry.links.map((l) => l.label + ' | ' + l.url).join('\n')
+      : '';
+    $('#komp-note').value = entry && entry.note ? entry.note : '';
+
+    $('#komp-delete').hidden = !entry;
+    $('#komp-form').hidden = false;
+    $('#komp-contact').focus();
+  }
+
+  /** "Beschriftung | https://…" je Zeile -> [{ label, url }] */
+  function parseLinks(text) {
+    const out = [];
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      const at = line.indexOf('|');
+      if (at === -1) throw new Error('Links bitte je Zeile als „Beschriftung | https://…" angeben.');
+      const label = line.slice(0, at).trim();
+      const url = line.slice(at + 1).trim();
+      if (!label || !url) throw new Error('Links bitte je Zeile als „Beschriftung | https://…" angeben.');
+      out.push({ label: label, url: url });
+    }
+    return out;
+  }
+
+  async function saveCompendiumEntry(e) {
+    e.preventDefault();
+    if (!kompEditing) return;
+    let links;
+    try { links = parseLinks($('#komp-links').value); }
+    catch (err) { flash('error', err.message); return; }
+
+    const note = $('#komp-note').value.trim();
+    const body = {
+      contactPoint: $('#komp-contact').value.trim(),
+      steps: $('#komp-steps').value.split('\n').map((l) => l.trim()).filter(Boolean),
+      links: links,
+      note: note || null,
+    };
+    try {
+      await api('/admin/compendium/' + kompEditing.id, { method: 'PUT', body });
+      kompOpen.add((catalogItems.find((i) => i.id === kompEditing.id) || {}).category);
+      flash('ok', 'Kompendium-Eintrag gespeichert.');
+      closeKompForm();
+      await loadCatalogAdmin();
+    } catch (err) { flash('error', window.DNL.fieldErrors(err)); }
+  }
+
+  async function deleteCompendiumEntry() {
+    if (!kompEditing) return;
+    if (!confirm('Eintrag für „' + kompEditing.name + '" löschen? Der Dienst selbst bleibt erhalten.')) return;
+    try {
+      await api('/admin/compendium/' + kompEditing.id, { method: 'DELETE' });
+      flash('ok', 'Kompendium-Eintrag gelöscht.');
+      closeKompForm();
+      await loadCatalogAdmin();
     } catch (err) { flash('error', err.message); }
   }
 

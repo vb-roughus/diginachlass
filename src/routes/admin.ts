@@ -3,7 +3,11 @@ import { asyncHandler, AppError } from '../middleware/error';
 import { validateBody } from '../middleware/validate';
 import { requireAdmin } from '../middleware/auth';
 import { prisma } from '../db/prisma';
-import { catalogServiceSchema, catalogServiceUpdateSchema } from '../validation/schemas';
+import {
+  catalogServiceSchema,
+  catalogServiceUpdateSchema,
+  compendiumEntrySchema,
+} from '../validation/schemas';
 
 /**
  * Admin-Endpunkte. Ersetzt das frühere Prototyp-Passcode-Gate (1234) durch eine
@@ -56,6 +60,9 @@ adminRouter.get(
     // Bewusst inklusive inaktiver Einträge — der Admin soll alles sehen.
     const items = await prisma.catalogService.findMany({
       orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+      // Pflegestand des Kompendiums mitliefern, damit die Oberfläche ohne
+      // zweite Abfrage weiss, wo noch Inhalte fehlen.
+      include: { compendium: { select: { id: true } } },
     });
     res.json({ items });
   }),
@@ -110,6 +117,68 @@ adminRouter.delete(
     await prisma.catalogService.delete({ where: { id: req.params.id } });
     // Bereits erfasste Nutzer-Dienste bleiben unberührt: sie speichern den Namen
     // als Text und haben keine Fremdschlüssel-Beziehung zum Katalog.
+    res.status(204).end();
+  }),
+);
+
+// --- Kompendium -------------------------------------------------------------
+// Je Katalog-Dienst genau ein Eintrag: Anlaufstelle, Schritte, offizielle Links
+// und ein optionaler Hinweis.
+
+adminRouter.get(
+  '/compendium',
+  asyncHandler(async (_req, res) => {
+    const items = await prisma.compendiumEntry.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: { service: { select: { id: true, name: true, category: true } } },
+    });
+    res.json({ items });
+  }),
+);
+
+adminRouter.get(
+  '/compendium/:serviceId',
+  asyncHandler(async (req, res) => {
+    const item = await prisma.compendiumEntry.findUnique({
+      where: { serviceId: req.params.serviceId },
+      include: { service: { select: { id: true, name: true, category: true } } },
+    });
+    if (!item) throw new AppError(404, 'Für diesen Dienst ist noch kein Eintrag erfasst.');
+    res.json({ item });
+  }),
+);
+
+// Anlegen oder aktualisieren — die Oberfläche muss beides nicht unterscheiden.
+adminRouter.put(
+  '/compendium/:serviceId',
+  validateBody(compendiumEntrySchema),
+  asyncHandler(async (req, res) => {
+    const service = await prisma.catalogService.findUnique({ where: { id: req.params.serviceId } });
+    if (!service) throw new AppError(404, 'Dienst nicht gefunden.');
+
+    const data = {
+      contactPoint: req.body.contactPoint,
+      steps: req.body.steps,
+      links: req.body.links,
+      note: req.body.note ?? null,
+    };
+    const item = await prisma.compendiumEntry.upsert({
+      where: { serviceId: service.id },
+      create: { serviceId: service.id, ...data },
+      update: data,
+    });
+    res.json({ item });
+  }),
+);
+
+adminRouter.delete(
+  '/compendium/:serviceId',
+  asyncHandler(async (req, res) => {
+    const existing = await prisma.compendiumEntry.findUnique({
+      where: { serviceId: req.params.serviceId },
+    });
+    if (!existing) throw new AppError(404, 'Für diesen Dienst ist kein Eintrag erfasst.');
+    await prisma.compendiumEntry.delete({ where: { serviceId: req.params.serviceId } });
     res.status(204).end();
   }),
 );

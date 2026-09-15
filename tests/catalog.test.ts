@@ -98,3 +98,113 @@ describe('Dienst-Katalog', () => {
     expect(names(after.body)).not.toContain('Umbenannt');
   });
 });
+
+describe('Kompendium', () => {
+  /** Legt einen Katalog-Dienst an und gibt dessen Id zurück. */
+  async function makeService(a: Agent, csrf: string, name: string): Promise<string> {
+    const res = await a
+      .post('/api/admin/services')
+      .set('x-csrf-token', csrf)
+      .send({ name, category: 'cloud' })
+      .expect(201);
+    return res.body.item.id as string;
+  }
+
+  const payload = {
+    contactPoint: 'Angehörige wenden sich an den Support.',
+    steps: ['Todesfall melden', 'Sterbeurkunde einreichen'],
+    links: [{ label: 'Offizielle Hilfe', url: 'https://example.com/hilfe' }],
+    note: 'Bearbeitung dauert einige Wochen.',
+  };
+
+  it('verwehrt normalen Nutzenden den Zugriff (403)', async () => {
+    const a = agent();
+    const user = await registerVerifyLogin(a, 'normal-komp@example.com');
+    const res = await a
+      .put('/api/admin/compendium/irgendeine-id')
+      .set('x-csrf-token', user.csrf)
+      .send(payload);
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('KEIN_ADMIN');
+  });
+
+  it('legt einen Eintrag an und gibt ihn wieder aus', async () => {
+    const { a, csrf } = await adminAgent('komp1@example.com');
+    const id = await makeService(a, csrf, 'Dienst mit Eintrag');
+
+    const missing = await a.get('/api/admin/compendium/' + id);
+    expect(missing.status).toBe(404);
+
+    const put = await a.put('/api/admin/compendium/' + id).set('x-csrf-token', csrf).send(payload);
+    expect(put.status).toBe(200);
+
+    const got = await a.get('/api/admin/compendium/' + id);
+    expect(got.status).toBe(200);
+    expect(got.body.item.contactPoint).toBe(payload.contactPoint);
+    expect(got.body.item.steps).toEqual(payload.steps);
+    expect(got.body.item.links).toEqual(payload.links);
+    expect(got.body.item.service.name).toBe('Dienst mit Eintrag');
+  });
+
+  it('aktualisiert einen bestehenden Eintrag, statt einen zweiten anzulegen', async () => {
+    const { a, csrf } = await adminAgent('komp2@example.com');
+    const id = await makeService(a, csrf, 'Dienst doppelt gepflegt');
+
+    await a.put('/api/admin/compendium/' + id).set('x-csrf-token', csrf).send(payload).expect(200);
+    await a
+      .put('/api/admin/compendium/' + id)
+      .set('x-csrf-token', csrf)
+      .send({ ...payload, contactPoint: 'Neue Anlaufstelle.' })
+      .expect(200);
+
+    const list = await a.get('/api/admin/compendium');
+    expect(list.body.items).toHaveLength(1);
+    expect(list.body.items[0].contactPoint).toBe('Neue Anlaufstelle.');
+  });
+
+  it('lehnt ungültige Links ab (400)', async () => {
+    const { a, csrf } = await adminAgent('komp3@example.com');
+    const id = await makeService(a, csrf, 'Dienst mit kaputtem Link');
+    const res = await a
+      .put('/api/admin/compendium/' + id)
+      .set('x-csrf-token', csrf)
+      .send({ ...payload, links: [{ label: 'Kaputt', url: 'kein-link' }] });
+    expect(res.status).toBe(400);
+  });
+
+  it('weist den Pflegestand in der Dienstliste aus', async () => {
+    const { a, csrf } = await adminAgent('komp4@example.com');
+    const gepflegt = await makeService(a, csrf, 'Gepflegt');
+    await makeService(a, csrf, 'Offen');
+    await a.put('/api/admin/compendium/' + gepflegt).set('x-csrf-token', csrf).send(payload).expect(200);
+
+    const list = await a.get('/api/admin/services');
+    const byName: Record<string, { compendium: unknown }> = {};
+    for (const i of list.body.items) byName[i.name] = i;
+    expect(byName['Gepflegt'].compendium).not.toBeNull();
+    expect(byName['Offen'].compendium).toBeNull();
+  });
+
+  it('entfernt den Eintrag mit dem Dienst (Kaskade)', async () => {
+    const { a, csrf } = await adminAgent('komp5@example.com');
+    const id = await makeService(a, csrf, 'Dienst wird gelöscht');
+    await a.put('/api/admin/compendium/' + id).set('x-csrf-token', csrf).send(payload).expect(200);
+
+    await a.delete('/api/admin/services/' + id).set('x-csrf-token', csrf).expect(204);
+
+    const list = await a.get('/api/admin/compendium');
+    expect(list.body.items).toHaveLength(0);
+  });
+
+  it('löscht einen Eintrag einzeln, ohne den Dienst zu entfernen', async () => {
+    const { a, csrf } = await adminAgent('komp6@example.com');
+    const id = await makeService(a, csrf, 'Dienst bleibt');
+    await a.put('/api/admin/compendium/' + id).set('x-csrf-token', csrf).send(payload).expect(200);
+
+    await a.delete('/api/admin/compendium/' + id).set('x-csrf-token', csrf).expect(204);
+    expect((await a.get('/api/admin/compendium/' + id)).status).toBe(404);
+
+    const services = await a.get('/api/admin/services');
+    expect(names(services.body)).toContain('Dienst bleibt');
+  });
+});
