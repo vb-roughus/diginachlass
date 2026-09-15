@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { agent, getCsrf, registerVerifyLogin, lastTokenFor } from './helpers';
-import { testMailbox } from '../src/lib/mailer';
+import { testMailbox, testMailFailure } from '../src/lib/mailer';
 import { prisma } from '../src/db/prisma';
 
 describe('Auth & CSRF', () => {
@@ -195,5 +195,67 @@ describe('DSG/DSGVO', () => {
     expect(gone).toBeNull();
     const accounts = await prisma.nachlassAccount.count();
     expect(accounts).toBe(0);
+  });
+});
+
+describe('Mailversand-Ausfälle', () => {
+  it('Registrierung bleibt erfolgreich, wenn der Mailversand scheitert', async () => {
+    const a = agent();
+    const csrf = await getCsrf(a);
+    const email = 'mailfail@example.com';
+
+    testMailFailure.enabled = true;
+    try {
+      const res = await a
+        .post('/api/auth/register')
+        .set('x-csrf-token', csrf)
+        .send({ email, password: 'TestPasswort1' });
+      expect(res.status).toBe(200);
+    } finally {
+      testMailFailure.enabled = false;
+    }
+
+    // Konto wurde trotz fehlgeschlagener Mail angelegt (vorher: HTTP 500).
+    const user = await prisma.user.findUnique({ where: { email } });
+    expect(user).not.toBeNull();
+  });
+
+  it('erneute Registrierung derselben Adresse bleibt generisch (keine Sackgasse)', async () => {
+    const a = agent();
+    const csrf = await getCsrf(a);
+    const email = 'mailfail2@example.com';
+
+    testMailFailure.enabled = true;
+    try {
+      const r1 = await a
+        .post('/api/auth/register')
+        .set('x-csrf-token', csrf)
+        .send({ email, password: 'TestPasswort1' });
+      const r2 = await a
+        .post('/api/auth/register')
+        .set('x-csrf-token', csrf)
+        .send({ email, password: 'TestPasswort1' });
+      expect(r1.status).toBe(200);
+      expect(r2.status).toBe(200);
+      expect(r1.body.message).toBe(r2.body.message);
+    } finally {
+      testMailFailure.enabled = false;
+    }
+  });
+
+  it('Passwort-Reset-Anfrage bleibt generisch, wenn der Mailversand scheitert', async () => {
+    const a = agent();
+    const user = await registerVerifyLogin(a, 'mailfail3@example.com');
+
+    testMailFailure.enabled = true;
+    try {
+      const res = await a
+        .post('/api/auth/password-reset/request')
+        .set('x-csrf-token', user.csrf)
+        .send({ email: user.email });
+      expect(res.status).toBe(200);
+    } finally {
+      testMailFailure.enabled = false;
+    }
   });
 });

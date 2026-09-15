@@ -25,9 +25,9 @@ function button(href: string, label: string): string {
   return `<a href="${href}" style="display:inline-block;background:#1F4A43;color:#F6F2EA;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600">${label}</a>`;
 }
 
-export async function sendVerificationEmail(to: string, token: string): Promise<void> {
+export async function sendVerificationEmail(to: string, token: string): Promise<boolean> {
   const url = `${env.APP_BASE_URL}/app/verify-email.html?token=${encodeURIComponent(token)}`;
-  await sendMail({
+  return sendMail({
     to,
     subject: 'Bitte bestätigen Sie Ihre E-Mail-Adresse',
     html: layout(
@@ -40,9 +40,9 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   });
 }
 
-export async function sendPasswordResetEmail(to: string, token: string): Promise<void> {
+export async function sendPasswordResetEmail(to: string, token: string): Promise<boolean> {
   const url = `${env.APP_BASE_URL}/app/reset-password.html?token=${encodeURIComponent(token)}`;
-  await sendMail({
+  return sendMail({
     to,
     subject: 'Passwort zurücksetzen',
     html: layout(
@@ -69,14 +69,14 @@ function formatCHF(rappen: number, currency: string): string {
   return `${currency} ${(rappen / 100).toFixed(2)}`;
 }
 
-export async function sendReceiptEmail(data: ReceiptData): Promise<void> {
+export async function sendReceiptEmail(data: ReceiptData): Promise<boolean> {
   const dateStr = data.date.toLocaleDateString('de-CH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
   const amount = formatCHF(data.amount, data.currency);
-  await sendMail({
+  return sendMail({
     to: data.to,
     subject: `Ihre Zahlungsbestätigung ${data.receiptNumber}`,
     html: layout(
